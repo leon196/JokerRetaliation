@@ -9,6 +9,7 @@ public class Controls : MonoBehaviour
 	public Sprite batmanAttack;
 
 	public bool snap = false;
+	public bool attack = false;
 
 	private List<GameObject> blocs;
 	public List<GameObject> Blocs { set { blocs = value; } }
@@ -70,53 +71,12 @@ public class Controls : MonoBehaviour
 
 		UpdateMovement();
 
+		if (attack) Attack();
+
 		if (transform.position.y < -7.0f) {
 			RespawnPlayer();
 		}
 
-		// Attack
-		if (Input.GetButtonDown("Fire1") && !ducking) {
-			playerSprite.sprite = batmanAttack;
-			attackSprite.enabled = true;
-			attackLast = Time.time;
-		}
-
-		// Stop Attacking
-		if (attackLast + attackDelay < Time.time) {
-			playerSprite.sprite = batmanStand;
-			attackSprite.enabled = false;
-		}
-		// Attacking
-		else {
-			for (int i = 0; i < blocs.Count; i++)
-			{
-				GameObject bloc = blocs[i];
-				if (attackCollider.bounds.Intersects(bloc.collider.bounds)) {
-
-					// Remove Animation 
-					if (bloc.GetComponent<Animation>() != null) {
-						Destroy(bloc.GetComponent<Animation>());
-					}
-
-					// Add Physics
-					if (bloc.GetComponent<Rigidbody>() == null) {
-						bloc.AddComponent<Rigidbody>();
-						bloc.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
-					}
-
-					// Push
-					//Vector3 direction = bloc.transform.position - attackCollider.transform.position;
-					Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
-					direction.Normalize();
-					bloc.GetComponent<Rigidbody>().AddForce(direction * attackForce, ForceMode.Impulse);
-					bloc.GetComponent<Rigidbody>().AddTorque(Vector3.forward * Random.Range(-attackForce, attackForce), ForceMode.Impulse);
-
-					// Kill
-					Destroy(bloc, 5.0f);
-					blocs.Remove(bloc);
-				}
-			}
-		}
 	}
 
 	void RespawnPlayer ()
@@ -240,5 +200,53 @@ public class Controls : MonoBehaviour
 		} else if (velocity.x > 0 && transform.localScale.x < 0) {
 			transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 		} 
+	}
+
+	void Attack ()
+	{
+
+		// Attack
+		if (Input.GetButtonDown("Fire1") && !ducking) {
+			playerSprite.sprite = batmanAttack;
+			attackSprite.enabled = true;
+			attackLast = Time.time;
+		}
+
+		// Stop Attacking
+		if (attackLast + attackDelay < Time.time) {
+			playerSprite.sprite = batmanStand;
+			attackSprite.enabled = false;
+		}
+		// Attacking
+		else {
+			for (int i = 0; i < blocs.Count; i++)
+			{
+				GameObject bloc = blocs[i];
+				if (attackCollider.bounds.Intersects(bloc.collider.bounds)) {
+
+					// Remove Animation 
+					if (bloc.GetComponent<Animation>() != null) {
+						Destroy(bloc.GetComponent<Animation>());
+					}
+
+					// Add Physics
+					if (bloc.GetComponent<Rigidbody>() == null) {
+						bloc.AddComponent<Rigidbody>();
+						bloc.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
+					}
+
+					// Push
+					//Vector3 direction = bloc.transform.position - attackCollider.transform.position;
+					Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
+					direction.Normalize();
+					bloc.GetComponent<Rigidbody>().AddForce(direction * attackForce, ForceMode.Impulse);
+					bloc.GetComponent<Rigidbody>().AddTorque(Vector3.forward * Random.Range(-attackForce, attackForce), ForceMode.Impulse);
+
+					// Kill
+					Destroy(bloc, 5.0f);
+					blocs.Remove(bloc);
+				}
+			}
+		}
 	}
 }
