@@ -6,16 +6,19 @@ public class Controls : MonoBehaviour
 {
 	public Sprite batmanStand;
 	public Sprite batmanDuck;
+	public Sprite batmanAttack;
 
 	private List<GameObject> blocs;
 	private BoxCollider playerCollider;
 	private SpriteRenderer playerSprite;
+	private SpriteRenderer attackSprite;
 	private GameObject blocSnapped;
 
 	private bool collisionDown = false;
 	private bool collisionLeft = false;
 	private bool collisionRight = false;
 	private bool collisionUp = false;
+	private bool ducking = false;
 	private Vector3 input;
 
 	private Vector3 velocity;
@@ -33,6 +36,9 @@ public class Controls : MonoBehaviour
 	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
 	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
 
+	private float attackDelay = 0.5f;
+	private float attackLast = 0.0f;
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -43,6 +49,11 @@ public class Controls : MonoBehaviour
 
 		playerCollider = GetComponent<BoxCollider>();
 		playerSprite = GetComponent<SpriteRenderer>();
+		attackSprite = transform.Find("Attack").GetComponent<SpriteRenderer>();
+		
+		if (batmanStand == null || batmanDuck == null || batmanAttack == null) {
+			Debug.Log("*Woops* public links broken");
+		}
 	}
 	
 	// Update is called once per frame
@@ -55,6 +66,17 @@ public class Controls : MonoBehaviour
 
 		if (transform.position.y < -7.0f) {
 			RespawnPlayer();
+		}
+
+		if (Input.GetButtonDown("Fire1") && !ducking) {
+			playerSprite.sprite = batmanAttack;
+			attackSprite.enabled = true;
+			attackLast = Time.time;
+		}
+
+		if (attackLast + attackDelay < Time.time) {
+			playerSprite.sprite = batmanStand;
+			attackSprite.enabled = false;
 		}
 	}
 
@@ -159,6 +181,7 @@ public class Controls : MonoBehaviour
 			playerSprite.sprite = batmanDuck;
 			playerCollider.center = new Vector2(rectDuck.x, rectDuck.y);
 			playerCollider.size = new Vector2(rectDuck.width, rectDuck.height);
+			ducking = true;
 		}
 		// Stand
 		else if (!collisionUp && input.y >= 0.0f && playerCollider.size.y < rectStand.height )
@@ -166,6 +189,7 @@ public class Controls : MonoBehaviour
 			playerSprite.sprite = batmanStand;
 			playerCollider.center = new Vector2(rectStand.x, rectStand.y);
 			playerCollider.size = new Vector2(rectStand.width, rectStand.height);
+			ducking = false;
 		}
 
 		// Apply Transformations
