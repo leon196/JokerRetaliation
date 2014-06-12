@@ -67,7 +67,7 @@ public class Generation : MonoBehaviour {
 			blocTemp.SetActive(bg.display);
 
 			index += 1;
-		} 
+		}
 	}
 	
 	// Update is called once per frame
