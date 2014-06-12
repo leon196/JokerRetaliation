@@ -4,9 +4,12 @@ using System.Collections.Generic;
 
 public class Controls : MonoBehaviour
 {
-	private List<Bounds> blocsBounds;
+	private List<GameObject> blocs;
 
-	private bool ground = false;
+	private bool collisionDown = false;
+	private bool collisionLeft = false;
+	private bool collisionRight = false;
+	private bool collisionUp = false;
 	private Vector3 input;
 
 	private Vector3 velocity;
@@ -15,6 +18,7 @@ public class Controls : MonoBehaviour
 	private float drag = 0.75f;
 	private float gravity = 0.0038f;
 	private const float VELOCITY_MAX = 0.1f;
+	private const float VELOCITY_OFFSET = 0.1f;
 
 	// Use this for initialization
 	void Start ()
@@ -22,8 +26,7 @@ public class Controls : MonoBehaviour
 		input = new Vector3();
 		velocity = new Vector3();
 
-		blocsBounds = Manager.Instance.BlocsBounds;
-		Debug.Log(blocsBounds.Count);
+		blocs = Manager.Instance.Blocs;
 	}
 	
 	// Update is called once per frame
@@ -34,15 +37,28 @@ public class Controls : MonoBehaviour
 		input.y = Input.GetAxis("Vertical") * Time.deltaTime * speed;
 
 		// Collision
-		ground = false;
-		foreach (Bounds bounds in blocsBounds) {
-			if (renderer.bounds.Intersects(bounds)) {
-				ground = true;
+		collisionDown = false;
+		collisionUp = false;
+		collisionRight = false;
+		collisionLeft = false;
+		foreach (GameObject bloc in blocs) {
+			Bounds bounds = bloc.renderer.bounds;
+			bool intersects = renderer.bounds.Intersects(bounds);
+			if (intersects) {
+				if (renderer.bounds.min.y >= bounds.max.y - VELOCITY_OFFSET) {
+					collisionDown = true;
+				} else if (renderer.bounds.max.y <= bounds.min.y + VELOCITY_OFFSET) {
+					collisionUp = true;
+				} else if (renderer.bounds.min.x >= bounds.max.x - VELOCITY_OFFSET) {
+					collisionLeft = true;
+				} else if (renderer.bounds.max.x <= bounds.min.x + VELOCITY_OFFSET) {
+					collisionRight = true;
+				}
 			}
 		}
 
 		// Velocity Horizontal
-		velocity.x = Mathf.Max(-VELOCITY_MAX, Mathf.Min(velocity.x + input.x, VELOCITY_MAX));
+		velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
 
 		// Velocity Drag
 		if (Mathf.Abs(velocity.x) < 0.1) {
@@ -52,7 +68,7 @@ public class Controls : MonoBehaviour
 		// Velocity Vertical
 
 		// In Air
-		if (!ground)
+		if (!collisionDown)
 		{
 			velocity.y = Mathf.Max(-VELOCITY_MAX, Mathf.Min(velocity.y - gravity, VELOCITY_MAX));
 		}
@@ -61,7 +77,7 @@ public class Controls : MonoBehaviour
 		{
 			if (input.y > 0.0f) {
 				velocity.y += jump;
-				ground = false;
+				collisionDown = false;
 			} else {
 				velocity.y = 0.0f;
 			}
@@ -69,5 +85,8 @@ public class Controls : MonoBehaviour
 
 		// Apply Transformations
 		transform.position += velocity;
+
+		// Change Orientation of Batman
+		transform.localScale = new Vector3(input.x >= 0.0f ? 1.0f : -1.0f, 1.0f, 1.0f);
 	}
 }

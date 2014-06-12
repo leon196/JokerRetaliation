@@ -20,19 +20,19 @@ public class Manager : MonoBehaviour {
 	}
 
 	// Get Blocs Bounds
-	private List<Bounds> _blocsBounds;
-	public List<Bounds> BlocsBounds {
+	private List<GameObject> _blocs;
+	public List<GameObject> Blocs {
 		get {
-			if (_blocsBounds == null) {
-				_blocsBounds = new List<Bounds>();
+			if (_blocs == null) {
+				_blocs = new List<GameObject>();
 				SpriteRenderer[] sprites = GetComponentsInChildren<SpriteRenderer>();
 				foreach (SpriteRenderer sprite in sprites) {
 					if (sprite.name == "Bloc") {
-						_blocsBounds.Add(sprite.bounds);
+						_blocs.Add(sprite.gameObject);
 					}
 				}
 			}
-			return _blocsBounds;
+			return _blocs;
 		}
 	}
 }
