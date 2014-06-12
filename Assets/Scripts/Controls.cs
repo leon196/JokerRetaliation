@@ -13,12 +13,15 @@ public class Controls : MonoBehaviour
 	private Vector3 input;
 
 	private Vector3 velocity;
-	private float speed = 1.5f;
-	private float jump = 0.275f;
-	private float drag = 0.75f;
+	private float speed = 4.5f;
+	private float jump = 40.5f;
+	private float dragAir = 0.95f;
+	private float dragGround = 0.75f;
 	private float gravity = 0.0038f;
-	private const float VELOCITY_MAX = 0.1f;
-	private const float VELOCITY_OFFSET = 0.1f;
+	private const float VELOCITY_MAX = 0.088f;
+	private const float JUMP_MAX = 0.158f;
+	private const float GRAVITY_MAX = 0.268f;
+	private const float VELOCITY_OFFSET = 0.5f;
 
 	// Use this for initialization
 	void Start ()
@@ -30,8 +33,9 @@ public class Controls : MonoBehaviour
 	}
 	
 	// Update is called once per frame
-	void FixedUpdate ()
+	void Update ()
 	{
+
 		// Inputs
 		input.x = Input.GetAxis("Horizontal") * Time.deltaTime * speed;
 		input.y = Input.GetAxis("Vertical") * Time.deltaTime * speed;
@@ -60,27 +64,26 @@ public class Controls : MonoBehaviour
 		// Velocity Horizontal
 		velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
 
-		// Velocity Drag
-		if (Mathf.Abs(velocity.x) < 0.1) {
-			velocity.x *= drag;
-		}
-
-		// Velocity Vertical
-
 		// In Air
 		if (!collisionDown)
 		{
-			velocity.y = Mathf.Max(-VELOCITY_MAX, Mathf.Min(velocity.y - gravity, VELOCITY_MAX));
+			velocity.y = Mathf.Max(-GRAVITY_MAX, Mathf.Min(velocity.y - gravity, JUMP_MAX));
+
+			// Velocity Horizontal Air Drag
+			velocity.x *= dragAir;
 		}
 		// On Ground
 		else
 		{
 			if (input.y > 0.0f) {
-				velocity.y += jump;
+				velocity.y =  Mathf.Max(-GRAVITY_MAX, Mathf.Min(jump, JUMP_MAX));
 				collisionDown = false;
 			} else {
 				velocity.y = 0.0f;
 			}
+
+			// Velocity Horizontal Ground Drag
+			velocity.x *= dragGround;
 		}
 
 		// Apply Transformations
