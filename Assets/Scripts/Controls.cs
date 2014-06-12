@@ -12,6 +12,7 @@ public class Controls : MonoBehaviour
 	private BoxCollider playerCollider;
 	private SpriteRenderer playerSprite;
 	private SpriteRenderer attackSprite;
+	private BoxCollider attackCollider;
 	private GameObject blocSnapped;
 
 	private bool collisionDown = false;
@@ -50,6 +51,7 @@ public class Controls : MonoBehaviour
 		playerCollider = GetComponent<BoxCollider>();
 		playerSprite = GetComponent<SpriteRenderer>();
 		attackSprite = transform.Find("Attack").GetComponent<SpriteRenderer>();
+		attackCollider = attackSprite.GetComponent<BoxCollider>();
 		
 		if (batmanStand == null || batmanDuck == null || batmanAttack == null) {
 			Debug.Log("*Woops* public links broken");
@@ -68,15 +70,48 @@ public class Controls : MonoBehaviour
 			RespawnPlayer();
 		}
 
+		// Attack
 		if (Input.GetButtonDown("Fire1") && !ducking) {
 			playerSprite.sprite = batmanAttack;
 			attackSprite.enabled = true;
+			attackCollider.isTrigger = false;
 			attackLast = Time.time;
 		}
 
+		// Stop Attacking
 		if (attackLast + attackDelay < Time.time) {
 			playerSprite.sprite = batmanStand;
 			attackSprite.enabled = false;
+			attackCollider.isTrigger = true;
+		}
+		// Attacking
+		else {
+			for (int i = 0; i < blocs.Count; i++)
+			{
+				GameObject bloc = blocs[i];
+				if (attackCollider.bounds.Intersects(bloc.collider.bounds)) {
+
+					// Remove Animation 
+					if (bloc.GetComponent<Animation>() != null) {
+						Destroy(bloc.GetComponent<Animation>());
+					}
+
+					// Add Physics
+					if (bloc.GetComponent<Rigidbody>() == null) {
+						bloc.AddComponent<Rigidbody>();
+						bloc.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
+					}
+
+					// Push
+					Vector3 direction = bloc.transform.position - attackCollider.transform.position;
+					direction.Normalize();
+					bloc.GetComponent<Rigidbody>().AddForce(direction * 4.0f, ForceMode.Impulse);
+
+					// Kill
+					Destroy(bloc, 5.0f);
+					blocs.Remove(bloc);
+				}
+			}
 		}
 	}
 
@@ -97,7 +132,7 @@ public class Controls : MonoBehaviour
 		collisionRight = false;
 		collisionLeft = false;
 		foreach (GameObject bloc in blocs) {
-			Bounds bounds = bloc.renderer.bounds;
+			Bounds bounds = bloc.collider.bounds;
 			bool intersectsCollider = playerCollider.bounds.Intersects(bounds);
 			if (intersectsCollider) {
 				float collisionDownDistance = playerCollider.bounds.min.y - bounds.max.y;
@@ -164,7 +199,7 @@ public class Controls : MonoBehaviour
 		// On Ground
 		else
 		{
-			if (!collisionUp && input.y > 0.0f) {
+			if (!collisionUp && (input.y > 0.0f || Input.GetButtonDown("Jump"))) {
 				velocity.y =  Mathf.Max(-GRAVITY_MAX, Mathf.Min(jump, JUMP_MAX));
 				collisionDown = false;
 			} else {
