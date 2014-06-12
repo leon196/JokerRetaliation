@@ -26,7 +26,7 @@ public class Controls : MonoBehaviour
 	private const float VELOCITY_MAX = 0.088f;
 	private const float JUMP_MAX = 0.158f;
 	private const float GRAVITY_MAX = 0.268f;
-	private const float VELOCITY_OFFSET = 0.5f;
+	private const float VELOCITY_COLLISION_OFFSET = 0.5f;
 
 	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
 	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
@@ -76,20 +76,23 @@ public class Controls : MonoBehaviour
 			Bounds bounds = bloc.renderer.bounds;
 			bool intersectsCollider = playerCollider.bounds.Intersects(bounds);
 			if (intersectsCollider) {
-				if (playerCollider.bounds.min.y >= bounds.max.y - VELOCITY_OFFSET) {
+				float collisionDownDistance = (playerCollider.bounds.min.y - bounds.max.y);
+				float collisionLeftDistance = (playerCollider.bounds.min.x - bounds.max.x);
+				float collisionRightDistance = (playerCollider.bounds.max.x - bounds.min.x);
+				if (collisionDownDistance >= -VELOCITY_COLLISION_OFFSET) {
 					collisionDown = true;
-				} else if (playerCollider.bounds.min.x >= bounds.max.x - VELOCITY_OFFSET) {
+					transform.position += new Vector3(0f, -collisionDownDistance, 0f);
+				} else if (collisionLeftDistance >= -VELOCITY_COLLISION_OFFSET) {
 					collisionLeft = true;
-				} else if (playerCollider.bounds.max.x <= bounds.min.x + VELOCITY_OFFSET) {
+					transform.position += new Vector3(-collisionLeftDistance, 0f, 0f);
+				} else if (collisionRightDistance <= VELOCITY_COLLISION_OFFSET) {
 					collisionRight = true;
-
-					// Move Player Away From Bloc
-					transform.position = new Vector3(transform.position.x - (playerCollider.bounds.max.x - bounds.min.x), transform.position.y, transform.position.z);
+					transform.position += new Vector3(-collisionRightDistance, 0f, 0f);
 				}
 			}
 			bool intersectsSprite = playerSprite.bounds.Intersects(bounds);
 			if (intersectsSprite) {
-				if (playerCollider.bounds.max.y <= bounds.min.y + VELOCITY_OFFSET) {
+				if (playerCollider.bounds.max.y <= bounds.min.y + VELOCITY_COLLISION_OFFSET) {
 					collisionUp = true;
 				} 
 			}
