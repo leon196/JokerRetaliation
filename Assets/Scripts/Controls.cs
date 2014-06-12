@@ -39,6 +39,7 @@ public class Controls : MonoBehaviour
 
 	private float attackDelay = 0.5f;
 	private float attackLast = 0.0f;
+	private float attackForce = 10.0f;
 
 	// Use this for initialization
 	void Start ()
@@ -74,7 +75,6 @@ public class Controls : MonoBehaviour
 		if (Input.GetButtonDown("Fire1") && !ducking) {
 			playerSprite.sprite = batmanAttack;
 			attackSprite.enabled = true;
-			attackCollider.isTrigger = false;
 			attackLast = Time.time;
 		}
 
@@ -82,7 +82,6 @@ public class Controls : MonoBehaviour
 		if (attackLast + attackDelay < Time.time) {
 			playerSprite.sprite = batmanStand;
 			attackSprite.enabled = false;
-			attackCollider.isTrigger = true;
 		}
 		// Attacking
 		else {
@@ -103,9 +102,10 @@ public class Controls : MonoBehaviour
 					}
 
 					// Push
-					Vector3 direction = bloc.transform.position - attackCollider.transform.position;
+					//Vector3 direction = bloc.transform.position - attackCollider.transform.position;
+					Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
 					direction.Normalize();
-					bloc.GetComponent<Rigidbody>().AddForce(direction * 4.0f, ForceMode.Impulse);
+					bloc.GetComponent<Rigidbody>().AddForce(direction * attackForce, ForceMode.Impulse);
 
 					// Kill
 					Destroy(bloc, 5.0f);
