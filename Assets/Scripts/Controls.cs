@@ -214,7 +214,7 @@ public class Controls : MonoBehaviour
 
 		// Stop Attacking
 		if (attackLast + attackDelay < Time.time) {
-			playerSprite.sprite = batmanStand;
+			playerSprite.sprite = ducking ? batmanDuck : batmanStand;
 			attackSprite.enabled = false;
 		}
 		// Attacking
