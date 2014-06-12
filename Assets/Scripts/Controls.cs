@@ -47,11 +47,27 @@ public class Controls : MonoBehaviour
 	void Update ()
 	{
 
-		// Inputs
-		input.x = Input.GetAxis("Horizontal") * Time.deltaTime * speed;
-		input.y = Input.GetAxis("Vertical") * Time.deltaTime * speed;
+		CheckCollisions();
 
-		// Collision
+		UpdateMovement();
+
+		if (transform.position.y < -7.0f) {
+			RespawnPlayer();
+		}
+	}
+
+	void RespawnPlayer ()
+	{
+		transform.position = new Vector3();
+		velocity = new Vector3();
+		collisionDown = false;
+		collisionUp = false;
+		collisionRight = false;
+		collisionLeft = false;
+	}
+
+	void CheckCollisions ()
+	{
 		collisionDown = false;
 		collisionUp = false;
 		collisionRight = false;
@@ -78,6 +94,14 @@ public class Controls : MonoBehaviour
 				} 
 			}
 		}
+	}
+
+	void UpdateMovement ()
+	{
+
+		// Inputs
+		input.x = Input.GetAxis("Horizontal") * Time.deltaTime * speed;
+		input.y = Input.GetAxis("Vertical") * Time.deltaTime * speed;
 
 		// Velocity Horizontal
 		velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
@@ -104,12 +128,6 @@ public class Controls : MonoBehaviour
 			velocity.x *= dragGround;
 		}
 
-		// Apply Transformations
-		transform.position += velocity;
-
-		// Change Orientation of Batman
-		transform.localScale = new Vector3(input.x >= 0.0f ? 1.0f : -1.0f, 1.0f, 1.0f);
-
 		// Duck
 		if (input.y < 0.0f && playerCollider.size.y > rectDuck.height)
 		{
@@ -124,5 +142,15 @@ public class Controls : MonoBehaviour
 			playerCollider.center = new Vector2(rectStand.x, rectStand.y);
 			playerCollider.size = new Vector2(rectStand.width, rectStand.height);
 		}
+
+		// Apply Transformations
+		transform.position += velocity;
+
+		// Change Orientation of Batman
+		if (velocity.x < 0 && transform.localScale.x > 0) {
+			transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+		} else if (velocity.x > 0 && transform.localScale.x < 0) {
+			transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		} 
 	}
 }
