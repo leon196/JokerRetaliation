@@ -6,6 +6,8 @@ using System.Linq;
 public class Generation : MonoBehaviour {
 
 	public GameObject bloc;
+	public float delay = 0.2f;
+	private float lastUpdate = 0.0f;
 	private List<GameObject> _blocs;
 	private float posXmin = -6.4f;
 	private float posXmax = 6.4f;
@@ -71,55 +73,59 @@ public class Generation : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 
-		for(int i = 0; i < 10; i++)
+		if (lastUpdate + delay < Time.time)
 		{
-			_blocGen[i] = _blocGen[i+1];
+			lastUpdate = Time.time;
+
+			for(int i = 0; i < 10; i++)
+			{
+				_blocGen[i] = _blocGen[i+1];
+			}
+
+			int randomNumber = Random.Range(0, 4);
+			
+			switch(randomNumber)
+			{
+				case 0:
+				{
+					BlocGen bg = new BlocGen();
+					bg.posY = posYTop;
+					bg.display = true;
+					_blocGen[10] = bg;
+					break;
+				}
+
+				case 1:
+				{
+					BlocGen bg = new BlocGen();
+					bg.posY = posYTop;
+					bg.display = false;
+					_blocGen[10] = bg;
+					break;
+				}
+
+				case 2:
+				{
+					BlocGen bg = new BlocGen();
+					bg.posY = posYBottom;
+					bg.display = true;
+					_blocGen[10] = bg;
+					break;
+				}
+
+				case 3:
+				{
+					BlocGen bg = new BlocGen();
+					bg.posY = posYBottom;
+					bg.display = false;
+					_blocGen[10] = bg;
+					break;
+				}
+			}
+
+			DisplayBlocs();
+
+			_blocs = Manager.Instance.Blocs;
 		}
-
-		int randomNumber = Random.Range(0, 4);
-		
-		switch(randomNumber)
-		{
-			case 0:
-			{
-				BlocGen bg = new BlocGen();
-				bg.posY = posYTop;
-				bg.display = true;
-				_blocGen[10] = bg;
-				break;
-			}
-
-			case 1:
-			{
-				BlocGen bg = new BlocGen();
-				bg.posY = posYTop;
-				bg.display = false;
-				_blocGen[10] = bg;
-				break;
-			}
-
-			case 2:
-			{
-				BlocGen bg = new BlocGen();
-				bg.posY = posYBottom;
-				bg.display = true;
-				_blocGen[10] = bg;
-				break;
-			}
-
-			case 3:
-			{
-				BlocGen bg = new BlocGen();
-				bg.posY = posYBottom;
-				bg.display = false;
-				_blocGen[10] = bg;
-				break;
-			}
-		}
-
-		DisplayBlocs();
-
-		_blocs = Manager.Instance.Blocs;
-
 	}
 }

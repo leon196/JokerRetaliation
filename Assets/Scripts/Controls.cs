@@ -106,6 +106,7 @@ public class Controls : MonoBehaviour
 					Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
 					direction.Normalize();
 					bloc.GetComponent<Rigidbody>().AddForce(direction * attackForce, ForceMode.Impulse);
+					bloc.GetComponent<Rigidbody>().AddTorque(Vector3.forward * Random.Range(-attackForce, attackForce), ForceMode.Impulse);
 
 					// Kill
 					Destroy(bloc, 5.0f);
