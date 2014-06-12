@@ -4,7 +4,12 @@ using System.Collections.Generic;
 
 public class Controls : MonoBehaviour
 {
+	public Sprite batmanStand;
+	public Sprite batmanDuck;
+
 	private List<GameObject> blocs;
+	private BoxCollider playerCollider;
+	private SpriteRenderer playerSprite;
 
 	private bool collisionDown = false;
 	private bool collisionLeft = false;
@@ -23,6 +28,9 @@ public class Controls : MonoBehaviour
 	private const float GRAVITY_MAX = 0.268f;
 	private const float VELOCITY_OFFSET = 0.5f;
 
+	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
+	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -30,6 +38,9 @@ public class Controls : MonoBehaviour
 		velocity = new Vector3();
 
 		blocs = Manager.Instance.Blocs;
+
+		playerCollider = GetComponent<BoxCollider>();
+		playerSprite = GetComponent<SpriteRenderer>();
 	}
 	
 	// Update is called once per frame
@@ -47,17 +58,21 @@ public class Controls : MonoBehaviour
 		collisionLeft = false;
 		foreach (GameObject bloc in blocs) {
 			Bounds bounds = bloc.renderer.bounds;
-			bool intersects = renderer.bounds.Intersects(bounds);
-			if (intersects) {
-				if (renderer.bounds.min.y >= bounds.max.y - VELOCITY_OFFSET) {
+			bool intersectsCollider = playerCollider.bounds.Intersects(bounds);
+			if (intersectsCollider) {
+				if (playerCollider.bounds.min.y >= bounds.max.y - VELOCITY_OFFSET) {
 					collisionDown = true;
-				} else if (renderer.bounds.max.y <= bounds.min.y + VELOCITY_OFFSET) {
-					collisionUp = true;
-				} else if (renderer.bounds.min.x >= bounds.max.x - VELOCITY_OFFSET) {
+				} else if (playerCollider.bounds.min.x >= bounds.max.x - VELOCITY_OFFSET) {
 					collisionLeft = true;
-				} else if (renderer.bounds.max.x <= bounds.min.x + VELOCITY_OFFSET) {
+				} else if (playerCollider.bounds.max.x <= bounds.min.x + VELOCITY_OFFSET) {
 					collisionRight = true;
 				}
+			}
+			bool intersectsSprite = playerSprite.bounds.Intersects(bounds);
+			if (intersectsSprite) {
+				if (playerCollider.bounds.max.y <= bounds.min.y + VELOCITY_OFFSET) {
+					collisionUp = true;
+				} 
 			}
 		}
 
@@ -75,7 +90,7 @@ public class Controls : MonoBehaviour
 		// On Ground
 		else
 		{
-			if (input.y > 0.0f) {
+			if (!collisionUp && input.y > 0.0f) {
 				velocity.y =  Mathf.Max(-GRAVITY_MAX, Mathf.Min(jump, JUMP_MAX));
 				collisionDown = false;
 			} else {
@@ -91,5 +106,20 @@ public class Controls : MonoBehaviour
 
 		// Change Orientation of Batman
 		transform.localScale = new Vector3(input.x >= 0.0f ? 1.0f : -1.0f, 1.0f, 1.0f);
+
+		// Duck
+		if (input.y < 0.0f && playerCollider.size.y > rectDuck.height)
+		{
+			playerSprite.sprite = batmanDuck;
+			playerCollider.center = new Vector2(rectDuck.x, rectDuck.y);
+			playerCollider.size = new Vector2(rectDuck.width, rectDuck.height);
+		}
+		// Stand
+		else if (!collisionUp && input.y >= 0.0f && playerCollider.size.y < rectStand.height )
+		{
+			playerSprite.sprite = batmanStand;
+			playerCollider.center = new Vector2(rectStand.x, rectStand.y);
+			playerCollider.size = new Vector2(rectStand.width, rectStand.height);
+		}
 	}
 }
