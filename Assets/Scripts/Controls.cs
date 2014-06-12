@@ -66,6 +66,9 @@ public class Controls : MonoBehaviour
 					collisionLeft = true;
 				} else if (playerCollider.bounds.max.x <= bounds.min.x + VELOCITY_OFFSET) {
 					collisionRight = true;
+
+					// Move Player Away From Bloc
+					transform.position = new Vector3(transform.position.x - (playerCollider.bounds.max.x - bounds.min.x), transform.position.y, transform.position.z);
 				}
 			}
 			bool intersectsSprite = playerSprite.bounds.Intersects(bounds);
