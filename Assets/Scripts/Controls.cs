@@ -10,6 +10,7 @@ public class Controls : MonoBehaviour
 	private List<GameObject> blocs;
 	private BoxCollider playerCollider;
 	private SpriteRenderer playerSprite;
+	private GameObject blocSnapped;
 
 	private bool collisionDown = false;
 	private bool collisionLeft = false;
@@ -26,7 +27,8 @@ public class Controls : MonoBehaviour
 	private const float VELOCITY_MAX = 0.088f;
 	private const float JUMP_MAX = 0.158f;
 	private const float GRAVITY_MAX = 0.268f;
-	private const float VELOCITY_COLLISION_OFFSET = 0.5f;
+	private const float VELOCITY_COLLISION_OFFSET = 0.5f; // like a bias : distance of the overlap between player bounds and bloc bounds
+	private const float VELOCITY_COLLISION_ATTENUATION = 0.33f; // the ratio of returning force when collision
 
 	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
 	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
@@ -76,16 +78,29 @@ public class Controls : MonoBehaviour
 			Bounds bounds = bloc.renderer.bounds;
 			bool intersectsCollider = playerCollider.bounds.Intersects(bounds);
 			if (intersectsCollider) {
-				float collisionDownDistance = (playerCollider.bounds.min.y - bounds.max.y);
-				float collisionLeftDistance = (playerCollider.bounds.min.x - bounds.max.x);
-				float collisionRightDistance = (playerCollider.bounds.max.x - bounds.min.x);
-				if (collisionDownDistance >= -VELOCITY_COLLISION_OFFSET) {
+				float collisionDownDistance = playerCollider.bounds.min.y - bounds.max.y;
+				float collisionLeftDistance = playerCollider.bounds.min.x - bounds.max.x;
+				float collisionRightDistance = playerCollider.bounds.max.x - bounds.min.x;
+				// Collision Down
+				if (collisionDownDistance >= -VELOCITY_COLLISION_OFFSET)
+				{
 					collisionDown = true;
-					transform.position += new Vector3(0f, -collisionDownDistance, 0f);
-				} else if (collisionLeftDistance >= -VELOCITY_COLLISION_OFFSET) {
+					transform.position += new Vector3(0f, -collisionDownDistance * VELOCITY_COLLISION_ATTENUATION, 0f);
+					// Snap Bloc
+					if (blocSnapped == null || blocSnapped.GetInstanceID() != bloc.GetInstanceID()) {
+						blocSnapped = bloc;
+						transform.parent = blocSnapped.transform;
+					}
+				}
+				// Collision Left
+				else if (collisionLeftDistance >= -VELOCITY_COLLISION_OFFSET)
+				{
 					collisionLeft = true;
 					transform.position += new Vector3(-collisionLeftDistance, 0f, 0f);
-				} else if (collisionRightDistance <= VELOCITY_COLLISION_OFFSET) {
+				} 
+				// Collision Right
+				else if (collisionRightDistance <= VELOCITY_COLLISION_OFFSET)
+				{
 					collisionRight = true;
 					transform.position += new Vector3(-collisionRightDistance, 0f, 0f);
 				}
@@ -96,6 +111,13 @@ public class Controls : MonoBehaviour
 					collisionUp = true;
 				} 
 			}
+		}
+
+		// Unsnap if no collision down
+		if (!collisionDown && blocSnapped != null) 
+		{
+			transform.parent = Manager.Instance.transform;
+			blocSnapped = null;
 		}
 	}
 
