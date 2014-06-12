@@ -8,7 +8,10 @@ public class Controls : MonoBehaviour
 	public Sprite batmanDuck;
 	public Sprite batmanAttack;
 
+	public bool snap = false;
+
 	private List<GameObject> blocs;
+	public List<GameObject> Blocs { set { blocs = value; } }
 	private BoxCollider playerCollider;
 	private SpriteRenderer playerSprite;
 	private SpriteRenderer attackSprite;
@@ -145,7 +148,7 @@ public class Controls : MonoBehaviour
 					collisionDown = true;
 					transform.position += new Vector3(0f, -collisionDownDistance * VELOCITY_COLLISION_ATTENUATION, 0f);
 					// Snap Bloc
-					if (blocSnapped == null || blocSnapped.GetInstanceID() != bloc.GetInstanceID()) {
+					if (snap && (blocSnapped == null || blocSnapped.GetInstanceID() != bloc.GetInstanceID())) {
 						blocSnapped = bloc;
 						transform.parent = blocSnapped.transform;
 					}
@@ -172,7 +175,7 @@ public class Controls : MonoBehaviour
 		}
 
 		// Unsnap if no collision down
-		if (!collisionDown && blocSnapped != null) 
+		if (snap && !collisionDown && blocSnapped != null) 
 		{
 			transform.parent = Manager.Instance.transform;
 			blocSnapped = null;

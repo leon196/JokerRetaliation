@@ -38,12 +38,14 @@ public class Generation : MonoBehaviour {
 
 		InstanciateBlocs();
 
-		_blocs = Manager.Instance.Blocs;
+		//_blocs = Manager.Instance.Blocs;
 	}
 
 	private void InstanciateBlocs()
 	{
 		float posX = posXmin;
+
+		_blocs = new List<GameObject>();
 
 		foreach(BlocGen bg in _blocGen)
 		{
@@ -54,7 +56,11 @@ public class Generation : MonoBehaviour {
 			blocTemp.gameObject.transform.parent = this.transform;
 
 			posX += 1.28f;
+
+			_blocs.Add(blocTemp);
 		}
+
+		Manager.Instance.Blocs = _blocs;
 	}
 
 	private void DisplayBlocs()

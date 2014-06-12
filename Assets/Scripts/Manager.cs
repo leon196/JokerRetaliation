@@ -19,6 +19,16 @@ public class Manager : MonoBehaviour {
 		}
 	}
 
+	private Controls _controls;
+	public Controls Controls { 
+		get {
+			if (_controls == null) {
+				_controls = GetComponentInChildren<Controls>();
+			}
+			return _controls;
+		}
+	}
+
 	// Get Blocs Bounds
 	private List<GameObject> _blocs;
 	public List<GameObject> Blocs {
@@ -33,6 +43,12 @@ public class Manager : MonoBehaviour {
 				}
 			}
 			return _blocs;
+		}
+		set {
+			_blocs = value;
+			if (Controls != null) {
+				Controls.Blocs = _blocs;
+			}
 		}
 	}
 }
