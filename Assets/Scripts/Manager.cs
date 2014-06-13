@@ -82,6 +82,24 @@ public class Manager : MonoBehaviour {
 		}
 	}
 
+	private RocketLauncher _rocketLauncher;
+	public RocketLauncher RocketLauncher {
+		get {
+			if (_rocketLauncher == null) {
+				_rocketLauncher = GetComponentInChildren<RocketLauncher>();
+			}
+			return _rocketLauncher;
+		}
+	}
+	public List<GameObject> RocketLauncherRockets {
+		get {
+			return RocketLauncher.Rockets;
+		}
+	}
+	public void DestroyRocket (GameObject rocket, int index) {
+		RocketLauncher.DestroyRocket(rocket, index);
+	}
+
 	private MiniIA _miniIA;
 	public MiniIA MiniIA { 
 		get {

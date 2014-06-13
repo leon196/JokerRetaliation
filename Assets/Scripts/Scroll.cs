@@ -13,7 +13,7 @@ public class Scroll : MonoBehaviour {
 	private float endX = -9.0f;
 	private float groundY = -3.8f;
 
-	private float randomRange = 3.0f;
+	private float randomRange = 1.0f;
 
 	public bool freeze = false;
 
@@ -22,6 +22,7 @@ public class Scroll : MonoBehaviour {
 		blocs = new List<GameObject>();	
 
 		// Ground
+
 		for (int i = 0; i < 14; i++) {
 
 			float randomY = Random.Range(0.0f, randomRange);

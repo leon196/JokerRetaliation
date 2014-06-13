@@ -14,6 +14,7 @@ public class RocketLauncher : MonoBehaviour {
 	private float lastAngle = 0.0f;
 
 	private List<GameObject> rockets;
+	public List<GameObject> Rockets { get { return rockets; } }
 
 	// Use this for initialization
 	void Start () {
@@ -35,10 +36,14 @@ public class RocketLauncher : MonoBehaviour {
 		for (int i = 0; i < rockets.Count; i++) {
 			GameObject rocket = rockets[i];
 			Vector3 dir = new Vector3(target.transform.position.x - rocket.transform.position.x, target.transform.position.y - rocket.transform.position.y, 0f);
+
+			// Find target
 			if (dir.magnitude < 1.0f) {
-				rockets.RemoveAt(i);
+				// Push player
 				target.GetComponent<Controls>().Push(dir);
-				Destroy(rocket);
+
+				DestroyRocket(rocket, i);
+				continue;
 			}
 			dir.Normalize();
 
@@ -50,5 +55,13 @@ public class RocketLauncher : MonoBehaviour {
 
 			rocket.transform.position += rocket.transform.right * speedRocket;
 		}
+	}
+
+	public void DestroyRocket(GameObject rocket, int index) {
+		rockets.RemoveAt(index);
+		ParticleSystem rocketParticle = rocket.GetComponentInChildren<ParticleSystem>();
+		rocketParticle.transform.parent = null;
+		rocketParticle.Stop();
+		Destroy(rocket);
 	}
 }

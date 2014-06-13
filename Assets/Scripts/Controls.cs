@@ -62,8 +62,8 @@ public class Controls : MonoBehaviour
 
 	private string inputHorizontalName = "Horizontal";
 	private string inputVerticalName = "Vertical";
-	private KeyCode inputAttack = KeyCode.R;
-	private KeyCode inputAttackBullet = KeyCode.E;
+	private KeyCode inputAttack = KeyCode.F;
+	private KeyCode inputAttackBullet = KeyCode.R;
 
 	public bool freeze = false;
 
@@ -86,7 +86,7 @@ public class Controls : MonoBehaviour
 			inputHorizontalName = "Horizontal2";
 			inputVerticalName = "Vertical2";
 			inputAttack = KeyCode.K;
-			inputAttackBullet = KeyCode.J;
+			inputAttackBullet = KeyCode.L;
 		}
 		
 		if (!spriteStand || !spriteDuck || !spriteAttack || !spriteDead) {
@@ -97,6 +97,11 @@ public class Controls : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
+		
+	   if (Input.GetKeyDown(KeyCode.Escape)) {
+            Application.LoadLevel(0);
+       }
+		
 		if (!freeze)
 		{
 			CheckCollisions();
@@ -299,7 +304,16 @@ public class Controls : MonoBehaviour
 					opponent.GetComponent<Controls>().Push(direction * 10.0f);
 				}
 			} 
-
+/*
+			List<GameObject> rockets = Manager.Instance.RocketLauncherRockets;
+			for (int i = 0; i < rockets.Count; i++) {
+				GameObject rocket = rockets[i];
+				if (attackCollider.bounds.Intersects(rocket.collider.bounds)) {
+					Manager.Instance.DestroyRocket(rocket, i);
+					continue;
+				}
+			}
+*/
 			// Blocs
 			for (int i = 0; i < blocs.Count; i++)
 			{
@@ -325,6 +339,7 @@ public class Controls : MonoBehaviour
 					// Kill
 					Destroy(bloc, 5.0f);
 					blocs.Remove(bloc);
+					continue;
 				}
 			}
 		}
