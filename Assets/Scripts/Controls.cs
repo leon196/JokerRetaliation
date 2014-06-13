@@ -50,6 +50,8 @@ public class Controls : MonoBehaviour
 	private string inputVerticalName = "Vertical";
 	private string inputAttackName = "Fire1";
 
+	public bool freeze = false;
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -77,17 +79,18 @@ public class Controls : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
+		if (!freeze)
+		{
+			CheckCollisions();
 
-		CheckCollisions();
+			UpdateMovement();
 
-		UpdateMovement();
+			if (attack) Attack();
 
-		if (attack) Attack();
-
-		if (transform.position.y < -7.0f) {
-			RespawnPlayer();
+			if (transform.position.y < -7.0f) {
+				RespawnPlayer();
+			}
 		}
-
 	}
 
 	void RespawnPlayer ()
