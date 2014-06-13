@@ -13,7 +13,7 @@ public class Scroll : MonoBehaviour {
 	private float endX = -9.0f;
 	private float groundY = -3.8f;
 
-	private float randomRange = 2.0f;
+	private float randomRange = 3.0f;
 
 	public bool freeze = false;
 
@@ -37,11 +37,18 @@ public class Scroll : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (!freeze) {
-			foreach (GameObject blocGround in blocs) {
-				blocGround.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
-				if (blocGround.transform.position.x < endX) {
+			foreach (GameObject bloc in blocs) {
+				bloc.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
+				if (bloc.transform.position.x < endX) {
 					float randomY = Random.Range(0.0f, randomRange);
-					blocGround.transform.position = new Vector3(startX, groundY + randomY, 0f);
+					bloc.transform.position = new Vector3(startX, groundY + randomY, 0f);
+/*
+					if (bloc.GetComponent<GenericAnimation>() == null && Random.Range(0.0f, 1.0f) > 0.75f) {
+						bloc.AddComponent<GenericAnimation>();
+						bloc.GetComponent<GenericAnimation>().turn = false;
+						bloc.GetComponent<GenericAnimation>().translate = true;
+					}
+					*/
 				}
 			}
 		}
