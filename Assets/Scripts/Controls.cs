@@ -41,7 +41,7 @@ public class Controls : MonoBehaviour
 	private float speed = 4.5f;
 	private float jump = 40.5f;
 	private float dragAir = 0.95f;
-	//private float dragGround = 0.75f;
+	private float dragGround = 0.75f;
 	private float gravity = 0.0038f;
 	private const float VELOCITY_MAX = 0.098f;
 	private const float JUMP_MAX = 0.158f;
@@ -238,16 +238,16 @@ public class Controls : MonoBehaviour
 				velocity.y = 0.0f;
 			}
 
-			if (!playerParticle.IsAlive() && Mathf.Abs(Input.GetAxis(inputHorizontalName)) > 0.0f ) {
+			if (!playerParticle.IsAlive() && Mathf.Abs(input.x) > 0.0f ) {
 				playerParticle.Play();
-			} else if (playerParticle.IsAlive() && Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
+			} else if (playerParticle.IsAlive() && Mathf.Abs(input.x) < 0.01f) {
 				playerParticle.Stop();
 			}
 
 			// Velocity Horizontal Ground Drag
-			//if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
-				//velocity.x *= dragGround;
-			//}
+			if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
+				velocity.x *= dragGround;
+			}
 		}
 
 		// Duck
