@@ -20,6 +20,8 @@ public class Controls : MonoBehaviour
 	private BoxCollider attackCollider;
 	private GameObject blocSnapped;
 
+	private GameObject opponent;
+
 	private bool collisionDown = false;
 	private bool collisionLeft = false;
 	private bool collisionRight = false;
@@ -64,6 +66,8 @@ public class Controls : MonoBehaviour
 		playerSprite = GetComponent<SpriteRenderer>();
 		attackSprite = transform.Find("Attack").GetComponent<SpriteRenderer>();
 		attackCollider = attackSprite.GetComponent<BoxCollider>();
+
+		opponent = Manager.Instance.GetOpponent(player1);
 
 		if (!player1) {
 			inputHorizontalName = "Horizontal2";
@@ -235,6 +239,19 @@ public class Controls : MonoBehaviour
 		}
 		// Attacking
 		else {
+
+			//
+			Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
+			direction.Normalize();
+
+			// Opponent
+			if (opponent) {
+				if (opponent.collider.bounds.Intersects(collider.bounds)) {
+					opponent.GetComponent<Controls>().Push(direction * 10.0f);
+				}
+			} 
+
+			// Blocs
 			for (int i = 0; i < blocs.Count; i++)
 			{
 				GameObject bloc = blocs[i];
@@ -253,8 +270,6 @@ public class Controls : MonoBehaviour
 
 					// Push
 					//Vector3 direction = bloc.transform.position - attackCollider.transform.position;
-					Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
-					direction.Normalize();
 					bloc.GetComponent<Rigidbody>().AddForce(direction * attackForce, ForceMode.Impulse);
 					bloc.GetComponent<Rigidbody>().AddTorque(Vector3.forward * Random.Range(-attackForce, attackForce), ForceMode.Impulse);
 
@@ -264,5 +279,15 @@ public class Controls : MonoBehaviour
 				}
 			}
 		}
+	}
+
+	public void Push(Vector3 direction) {
+
+		collisionDown = false;
+		collisionUp = false;
+		collisionRight = false;
+		collisionLeft = false;
+		transform.position += new Vector3(0f, VELOCITY_COLLISION_OFFSET, 0f);
+		velocity = direction;
 	}
 }
