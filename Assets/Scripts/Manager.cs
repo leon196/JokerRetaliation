@@ -19,13 +19,23 @@ public class Manager : MonoBehaviour {
 		}
 	}
 
-	private Controls _controls;
-	public Controls Controls { 
+	private Controls[] _controls;
+	public Controls[] Controls { 
 		get {
 			if (_controls == null) {
-				_controls = GetComponentInChildren<Controls>();
+				_controls = GetComponentsInChildren<Controls>();
 			}
 			return _controls;
+		}
+	}
+
+	private Scroll _scroll;
+	public Scroll Scroll {
+		get {
+			if (_scroll == null) {
+				_scroll = GetComponentInChildren<Scroll>();
+			}
+			return _scroll;
 		}
 	}
 
@@ -47,7 +57,9 @@ public class Manager : MonoBehaviour {
 		set {
 			_blocs = value;
 			if (Controls != null) {
-				Controls.Blocs = _blocs;
+				foreach (Controls controls in Controls) {
+					controls.Blocs = _blocs;
+				}
 			}
 			if (MiniIA != null) {
 				MiniIA.Blocs = _blocs;
@@ -62,6 +74,30 @@ public class Manager : MonoBehaviour {
 				_miniIA = GetComponentInChildren<MiniIA>();
 			}
 			return _miniIA;
+		}
+	}
+
+	public void Pause ()
+	{
+		if (Controls != null) {
+			foreach (Controls controls in Controls) {
+				controls.freeze = true;
+			}
+		}
+		if (Scroll != null) {
+			Scroll.freeze = true;
+		}
+	}
+
+	public void Resume ()
+	{
+		if (Controls != null) {
+			foreach (Controls controls in Controls) {
+				controls.freeze = false;
+			}
+		}
+		if (Scroll != null) {
+			Scroll.freeze = false;
 		}
 	}
 }

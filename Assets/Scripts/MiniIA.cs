@@ -33,5 +33,9 @@ public class MiniIA : MonoBehaviour {
 		if (!grounded) {
 			transform.position -= new Vector3(0f, gravity, 0f);
 		}
+
+		if (transform.position.y < -7.0f) {
+			transform.position = new Vector3(transform.position.x, 0f, transform.position.z);
+		}
 	}
 }

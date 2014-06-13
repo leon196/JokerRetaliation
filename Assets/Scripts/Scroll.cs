@@ -17,6 +17,8 @@ public class Scroll : MonoBehaviour {
 
 	private float randomRange = 2.0f;
 
+	public bool freeze = false;
+
 	// Use this for initialization
 	void Start () {
 		blocsGround = new List<GameObject>();	
@@ -37,11 +39,13 @@ public class Scroll : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		foreach (GameObject blocGround in blocsGround) {
-			blocGround.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
-			if (blocGround.transform.position.x < endX) {
-				float randomY = Random.Range(0.0f, randomRange);
-				blocGround.transform.position = new Vector3(startX, groundY + randomY, 0f);
+		if (!freeze) {
+			foreach (GameObject blocGround in blocsGround) {
+				blocGround.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
+				if (blocGround.transform.position.x < endX) {
+					float randomY = Random.Range(0.0f, randomRange);
+					blocGround.transform.position = new Vector3(startX, groundY + randomY, 0f);
+				}
 			}
 		}
 	}
