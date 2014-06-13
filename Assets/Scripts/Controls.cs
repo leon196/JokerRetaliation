@@ -9,6 +9,7 @@ public class Controls : MonoBehaviour
 	public Sprite spriteAttack;
 	public Sprite spriteDead;
 	public GameObject bulletPrefab;
+	public GameObject explosionPrefab;
 
 	public bool player1 = true;
 	public bool snap = false;
@@ -61,7 +62,7 @@ public class Controls : MonoBehaviour
 
 	private string inputHorizontalName = "Horizontal";
 	private string inputVerticalName = "Vertical";
-	private string inputAttackName = "Fire1";
+	private KeyCode inputAttack = KeyCode.R;
 	private KeyCode inputAttackBullet = KeyCode.E;
 
 	public bool freeze = false;
@@ -84,8 +85,8 @@ public class Controls : MonoBehaviour
 		if (!player1) {
 			inputHorizontalName = "Horizontal2";
 			inputVerticalName = "Vertical2";
-			inputAttackName = "Fire2";
-			inputAttackBullet = KeyCode.O;
+			inputAttack = KeyCode.K;
+			inputAttackBullet = KeyCode.J;
 		}
 		
 		if (!spriteStand || !spriteDuck || !spriteAttack || !spriteDead) {
@@ -274,7 +275,7 @@ public class Controls : MonoBehaviour
 		}
 
 		// Attack
-		if (Input.GetButtonDown(inputAttackName) && !ducking) {
+		if (Input.GetKeyDown(inputAttack) && !ducking) {
 			playerSprite.sprite = spriteAttack;
 			attackSprite.enabled = true;
 			attackLast = Time.time;
@@ -341,6 +342,9 @@ public class Controls : MonoBehaviour
 		dead = true;
 		deadLast = Time.time;
 		playerSprite.sprite = spriteDead;
+
+		GameObject explosion = Instantiate(explosionPrefab) as GameObject;
+		explosion.transform.position = new Vector3(transform.position.x, collider.bounds.min.y, 0f);
 	}
 
 	private void FireBullet () {
@@ -351,9 +355,15 @@ public class Controls : MonoBehaviour
 		direction.Normalize();
 		bullet.rigidbody.AddForce(direction * bulletForce, ForceMode.Impulse);
 
-		List<GameObject> playerBullets = Manager.Instance.BulletsPlayer1;
-		playerBullets.Add(bullet);
-		Manager.Instance.BulletsPlayer1 = playerBullets;
+		if (player1) {
+			List<GameObject> playerBullets = Manager.Instance.BulletsPlayer1;
+			playerBullets.Add(bullet);
+			Manager.Instance.BulletsPlayer1 = playerBullets;
+		} else {
+			List<GameObject> playerBullets = Manager.Instance.BulletsPlayer2;
+			playerBullets.Add(bullet);
+			Manager.Instance.BulletsPlayer2 = playerBullets;
+		}
 
 		Destroy(bullet, 5.0f);
 	}
