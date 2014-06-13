@@ -22,6 +22,7 @@ public class Controls : MonoBehaviour
 	private SpriteRenderer attackSprite;
 	private BoxCollider attackCollider;
 	private GameObject blocSnapped;
+	private ParticleSystem playerParticle;
 
 	private GameObject opponent;
 	private List<GameObject> opponentBullets;
@@ -79,6 +80,7 @@ public class Controls : MonoBehaviour
 		playerSprite = GetComponent<SpriteRenderer>();
 		attackSprite = transform.Find("Attack").GetComponent<SpriteRenderer>();
 		attackCollider = attackSprite.GetComponent<BoxCollider>();
+		playerParticle = playerSprite.GetComponentInChildren<ParticleSystem>();
 
 		opponent = Manager.Instance.GetOpponent(player1);
 
@@ -220,6 +222,10 @@ public class Controls : MonoBehaviour
 
 			// Velocity Horizontal Air Drag
 			velocity.x *= dragAir;
+
+			if (playerParticle.IsAlive()) {
+				playerParticle.Stop();
+			}
 		}
 		// On Ground
 		else
@@ -230,6 +236,12 @@ public class Controls : MonoBehaviour
 				collisionDown = false;
 			} else {
 				velocity.y = 0.0f;
+			}
+
+			if (!playerParticle.IsAlive() && Mathf.Abs(Input.GetAxis(inputHorizontalName)) > 0.0f ) {
+				playerParticle.Play();
+			} else if (playerParticle.IsAlive() && Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
+				playerParticle.Stop();
 			}
 
 			// Velocity Horizontal Ground Drag
