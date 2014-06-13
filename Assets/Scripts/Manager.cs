@@ -49,6 +49,19 @@ public class Manager : MonoBehaviour {
 			if (Controls != null) {
 				Controls.Blocs = _blocs;
 			}
+			if (MiniIA != null) {
+				MiniIA.Blocs = _blocs;
+			}
+		}
+	}
+
+	private MiniIA _miniIA;
+	public MiniIA MiniIA { 
+		get {
+			if (_miniIA == null) {
+				_miniIA = GetComponentInChildren<MiniIA>();
+			}
+			return _miniIA;
 		}
 	}
 }

@@ -171,7 +171,9 @@ public class Controls : MonoBehaviour
 			}
 
 			// Velocity Horizontal Ground Drag
-			velocity.x *= dragGround;
+			if (Mathf.Abs(Input.GetAxis("Horizontal")) < 0.1f) {
+				velocity.x *= dragGround;
+			}
 		}
 
 		// Duck
