@@ -8,6 +8,7 @@ public class Controls : MonoBehaviour
 	public Sprite spriteDuck;
 	public Sprite spriteAttack;
 
+	public bool player1 = true;
 	public bool snap = false;
 	public bool attack = false;
 
@@ -45,6 +46,10 @@ public class Controls : MonoBehaviour
 	private float attackLast = 0.0f;
 	private float attackForce = 10.0f;
 
+	private string inputHorizontalName = "Horizontal";
+	private string inputVerticalName = "Vertical";
+	private string inputAttackName = "Fire1";
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -57,6 +62,12 @@ public class Controls : MonoBehaviour
 		playerSprite = GetComponent<SpriteRenderer>();
 		attackSprite = transform.Find("Attack").GetComponent<SpriteRenderer>();
 		attackCollider = attackSprite.GetComponent<BoxCollider>();
+
+		if (!player1) {
+			inputHorizontalName = "Horizontal2";
+			inputVerticalName = "Vertical2";
+			inputAttackName = "Fire2";
+		}
 		
 		if (spriteStand == null || spriteDuck == null || spriteAttack == null) {
 			Debug.Log("*Woops* public links broken");
@@ -146,8 +157,8 @@ public class Controls : MonoBehaviour
 	{
 
 		// Inputs
-		input.x = Input.GetAxis("Horizontal") * Time.deltaTime * speed;
-		input.y = Input.GetAxis("Vertical") * Time.deltaTime * speed;
+		input.x = Input.GetAxis(inputHorizontalName) * Time.deltaTime * speed;
+		input.y = Input.GetAxis(inputVerticalName) * Time.deltaTime * speed;
 
 		// Velocity Horizontal
 		velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
@@ -163,7 +174,7 @@ public class Controls : MonoBehaviour
 		// On Ground
 		else
 		{
-			if (!collisionUp && (input.y > 0.0f || Input.GetButtonDown("Jump"))) {
+			if (!collisionUp && input.y > 0.0f) {
 				velocity.y =  Mathf.Max(-GRAVITY_MAX, Mathf.Min(jump, JUMP_MAX));
 				collisionDown = false;
 			} else {
@@ -171,7 +182,7 @@ public class Controls : MonoBehaviour
 			}
 
 			// Velocity Horizontal Ground Drag
-			if (Mathf.Abs(Input.GetAxis("Horizontal")) < 0.1f) {
+			if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
 				velocity.x *= dragGround;
 			}
 		}
@@ -208,7 +219,7 @@ public class Controls : MonoBehaviour
 	{
 
 		// Attack
-		if (Input.GetButtonDown("Fire1") && !ducking) {
+		if (Input.GetButtonDown(inputAttackName) && !ducking) {
 			playerSprite.sprite = spriteAttack;
 			attackSprite.enabled = true;
 			attackLast = Time.time;
