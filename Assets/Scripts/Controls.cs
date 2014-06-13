@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 public class Controls : MonoBehaviour
 {
-	public Sprite batmanStand;
-	public Sprite batmanDuck;
-	public Sprite batmanAttack;
+	public Sprite spriteStand;
+	public Sprite spriteDuck;
+	public Sprite spriteAttack;
 
 	public bool snap = false;
 	public bool attack = false;
@@ -58,7 +58,7 @@ public class Controls : MonoBehaviour
 		attackSprite = transform.Find("Attack").GetComponent<SpriteRenderer>();
 		attackCollider = attackSprite.GetComponent<BoxCollider>();
 		
-		if (batmanStand == null || batmanDuck == null || batmanAttack == null) {
+		if (spriteStand == null || spriteDuck == null || spriteAttack == null) {
 			Debug.Log("*Woops* public links broken");
 		}
 	}
@@ -179,7 +179,7 @@ public class Controls : MonoBehaviour
 		// Duck
 		if (input.y < 0.0f && playerCollider.size.y > rectDuck.height)
 		{
-			playerSprite.sprite = batmanDuck;
+			playerSprite.sprite = spriteDuck;
 			playerCollider.center = new Vector2(rectDuck.x, rectDuck.y);
 			playerCollider.size = new Vector2(rectDuck.width, rectDuck.height);
 			ducking = true;
@@ -187,7 +187,7 @@ public class Controls : MonoBehaviour
 		// Stand
 		else if (!collisionUp && input.y >= 0.0f && playerCollider.size.y < rectStand.height )
 		{
-			playerSprite.sprite = batmanStand;
+			playerSprite.sprite = spriteStand;
 			playerCollider.center = new Vector2(rectStand.x, rectStand.y);
 			playerCollider.size = new Vector2(rectStand.width, rectStand.height);
 			ducking = false;
@@ -209,14 +209,14 @@ public class Controls : MonoBehaviour
 
 		// Attack
 		if (Input.GetButtonDown("Fire1") && !ducking) {
-			playerSprite.sprite = batmanAttack;
+			playerSprite.sprite = spriteAttack;
 			attackSprite.enabled = true;
 			attackLast = Time.time;
 		}
 
 		// Stop Attacking
 		if (attackLast + attackDelay < Time.time) {
-			playerSprite.sprite = ducking ? batmanDuck : batmanStand;
+			playerSprite.sprite = ducking ? spriteDuck : spriteStand;
 			attackSprite.enabled = false;
 		}
 		// Attacking
