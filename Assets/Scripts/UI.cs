@@ -8,7 +8,17 @@ public class UI : MonoBehaviour {
 	float start_time;
 	string timer_text;
 
+	//DEBUG
+	public bool you_win = false;
+	public bool you_lose = false;
+	//DEBUG
+
 	public GUIStyle timer_style;
+	public GUIStyle pause_style;
+	public GUIStyle main_menu_style;
+
+	public Texture texture_win;
+	public Texture texture_lose;
 
 	void Awake() {	
 		start_time = Time.time;	
@@ -25,14 +35,12 @@ public class UI : MonoBehaviour {
 	{
 		if (Input.GetKeyDown(KeyCode.P))
 		{
-			print("pause game");
 			Manager.Instance.Pause();
 			is_pause = true;
 		}
 
 		if (Input.GetKeyDown(KeyCode.Escape) && is_pause)
 		{
-			print("resume game");
 			Manager.Instance.Resume();
 			is_pause = false;
 		}
@@ -48,19 +56,36 @@ public class UI : MonoBehaviour {
 		
 		if (!is_pause) 
 		{
-			timer_text = String.Format ("{0:00}:{1:00}:{2:000}", minutes, seconds, fraction); 
+			timer_text = String.Format ("{0:00}:{1:00}:{2:00}", minutes, seconds, fraction); 
 			GUI.Label (new Rect (Screen.width / 2 - 50, 25, 100, 30), timer_text, timer_style);
 		}
 
 		if (is_pause) 
 		{
-			GUI.Label (new Rect (Screen.width/2, 200, 100, 30), "Pause", timer_style);
-			GUI.Label (new Rect (Screen.width/2, 250, 100, 30), "Hit Esc to resume game", timer_style);
-			if (GUI.Button(new Rect(Screen.width/2, 300, 100, 30), "Main Menu", timer_style))
+			GUI.Label (new Rect (Screen.width/2-50, 200, 100, 30), "Pause", pause_style);
+			if (GUI.Button(new Rect(Screen.width/2-60, 300, 100, 30), "Main Menu", main_menu_style))
 			{
 				Application.LoadLevel("MainMenu");
 			}
 		}
-					
+
+		if (you_win || you_lose) 
+		{
+			is_pause = true; // stop timer
+			Manager.Instance.Pause(); // stop game
+
+			if (you_win)
+				GUI.DrawTexture(new Rect(0, 0, 1024, 768), texture_win, ScaleMode.ScaleToFit, true, 0.0f);
+			if (you_lose)
+				GUI.DrawTexture(new Rect(0, 0, 1024, 768), texture_lose, ScaleMode.ScaleToFit, true, 0.0f);
+
+			StartCoroutine("backToMainMenu");
+		}
+	}
+
+	IEnumerator backToMainMenu()
+	{
+		yield return new WaitForSeconds(2);
+		Application.LoadLevel ("MainMenu");
 	}
 }
