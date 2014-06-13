@@ -7,6 +7,7 @@ public class Controls : MonoBehaviour
 	public Sprite spriteStand;
 	public Sprite spriteDuck;
 	public Sprite spriteAttack;
+	public Sprite spriteDead;
 
 	public bool player1 = true;
 	public bool snap = false;
@@ -48,6 +49,10 @@ public class Controls : MonoBehaviour
 	private float attackLast = 0.0f;
 	private float attackForce = 10.0f;
 
+	private float deadDelay = 0.5f;
+	private float deadLast = 0.0f;
+	private bool dead = false;
+
 	private string inputHorizontalName = "Horizontal";
 	private string inputVerticalName = "Vertical";
 	private string inputAttackName = "Fire1";
@@ -75,7 +80,7 @@ public class Controls : MonoBehaviour
 			inputAttackName = "Fire2";
 		}
 		
-		if (spriteStand == null || spriteDuck == null || spriteAttack == null) {
+		if (!spriteStand || !spriteDuck || !spriteAttack || !spriteDead) {
 			Debug.Log("*Woops* public links broken");
 		}
 	}
@@ -89,10 +94,15 @@ public class Controls : MonoBehaviour
 
 			UpdateMovement();
 
-			if (attack) Attack();
+			if (attack && !dead) Attack();
 
 			if (transform.position.y < -7.0f) {
 				RespawnPlayer();
+			}
+
+			if (dead && deadLast + deadDelay < Time.time) {
+				dead = false;
+				playerSprite.sprite = spriteStand;
 			}
 		}
 	}
@@ -164,11 +174,18 @@ public class Controls : MonoBehaviour
 	{
 
 		// Inputs
-		input.x = Input.GetAxis(inputHorizontalName) * Time.deltaTime * speed;
-		input.y = Input.GetAxis(inputVerticalName) * Time.deltaTime * speed;
+
+		if (!dead) {
+			input.x = Input.GetAxis(inputHorizontalName) * Time.deltaTime * speed;
+			input.y = Input.GetAxis(inputVerticalName) * Time.deltaTime * speed;
+		} else {
+			input.x = 0f;
+			input.y = 0f;
+		}
 
 		// Velocity Horizontal
 		velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
+		
 
 		// In Air
 		if (!collisionDown)
@@ -181,7 +198,8 @@ public class Controls : MonoBehaviour
 		// On Ground
 		else
 		{
-			if (!collisionUp && input.y > 0.0f) {
+			// Jump
+			if (!dead && !collisionUp && input.y > 0.0f) {
 				velocity.y =  Mathf.Max(-GRAVITY_MAX, Mathf.Min(jump, JUMP_MAX));
 				collisionDown = false;
 			} else {
@@ -189,9 +207,9 @@ public class Controls : MonoBehaviour
 			}
 
 			// Velocity Horizontal Ground Drag
-			if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
-				velocity.x *= dragGround;
-			}
+			//if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
+				//velocity.x *= dragGround;
+			//}
 		}
 
 		// Duck
@@ -289,5 +307,9 @@ public class Controls : MonoBehaviour
 		collisionLeft = false;
 		transform.position += new Vector3(0f, VELOCITY_COLLISION_OFFSET, 0f);
 		velocity = direction;
+
+		dead = true;
+		deadLast = Time.time;
+		playerSprite.sprite = spriteDead;
 	}
 }
