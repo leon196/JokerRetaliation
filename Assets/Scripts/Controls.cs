@@ -32,7 +32,7 @@ public class Controls : MonoBehaviour
 	private float dragAir = 0.95f;
 	private float dragGround = 0.75f;
 	private float gravity = 0.0038f;
-	private const float VELOCITY_MAX = 0.088f;
+	private const float VELOCITY_MAX = 0.098f;
 	private const float JUMP_MAX = 0.158f;
 	private const float GRAVITY_MAX = 0.268f;
 	private const float VELOCITY_COLLISION_OFFSET = 0.5f; // like a bias : distance of the overlap between player bounds and bloc bounds
