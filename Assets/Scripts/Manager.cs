@@ -114,4 +114,32 @@ public class Manager : MonoBehaviour {
 		}
 		return opponent;
 	}
+
+	private List<GameObject> _bulletsPlayer1;
+	public List<GameObject> BulletsPlayer1 {
+		get {
+			if (_bulletsPlayer1 == null) {
+				_bulletsPlayer1 = new List<GameObject>();
+			}
+			return _bulletsPlayer1;
+		}
+		set {
+			_bulletsPlayer1 = value;
+			GetOpponent(true).GetComponent<Controls>().OppenentBullets = _bulletsPlayer1;
+		}
+	}
+
+	private List<GameObject> _bulletsPlayer2;
+	public List<GameObject> BulletsPlayer2 {
+		get {
+			if (_bulletsPlayer2 == null) {
+				_bulletsPlayer2 = new List<GameObject>();
+			}
+			return _bulletsPlayer2;
+		}
+		set {
+			_bulletsPlayer2 = value;
+			GetOpponent(false).GetComponent<Controls>().OppenentBullets = _bulletsPlayer2;
+		}
+	}
 }

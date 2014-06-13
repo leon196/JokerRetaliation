@@ -8,6 +8,7 @@ public class Controls : MonoBehaviour
 	public Sprite spriteDuck;
 	public Sprite spriteAttack;
 	public Sprite spriteDead;
+	public GameObject bulletPrefab;
 
 	public bool player1 = true;
 	public bool snap = false;
@@ -22,6 +23,10 @@ public class Controls : MonoBehaviour
 	private GameObject blocSnapped;
 
 	private GameObject opponent;
+	private List<GameObject> opponentBullets;
+	public List<GameObject> OppenentBullets {
+		set { opponentBullets = value; }
+	}
 
 	private bool collisionDown = false;
 	private bool collisionLeft = false;
@@ -34,7 +39,7 @@ public class Controls : MonoBehaviour
 	private float speed = 4.5f;
 	private float jump = 40.5f;
 	private float dragAir = 0.95f;
-	private float dragGround = 0.75f;
+	//private float dragGround = 0.75f;
 	private float gravity = 0.0038f;
 	private const float VELOCITY_MAX = 0.098f;
 	private const float JUMP_MAX = 0.158f;
@@ -48,6 +53,7 @@ public class Controls : MonoBehaviour
 	private float attackDelay = 0.5f;
 	private float attackLast = 0.0f;
 	private float attackForce = 10.0f;
+	private float bulletForce = 10.0f;
 
 	private float deadDelay = 0.5f;
 	private float deadLast = 0.0f;
@@ -56,6 +62,7 @@ public class Controls : MonoBehaviour
 	private string inputHorizontalName = "Horizontal";
 	private string inputVerticalName = "Vertical";
 	private string inputAttackName = "Fire1";
+	private KeyCode inputAttackBullet = KeyCode.E;
 
 	public bool freeze = false;
 
@@ -78,6 +85,7 @@ public class Controls : MonoBehaviour
 			inputHorizontalName = "Horizontal2";
 			inputVerticalName = "Vertical2";
 			inputAttackName = "Fire2";
+			inputAttackBullet = KeyCode.O;
 		}
 		
 		if (!spriteStand || !spriteDuck || !spriteAttack || !spriteDead) {
@@ -103,6 +111,23 @@ public class Controls : MonoBehaviour
 			if (dead && deadLast + deadDelay < Time.time) {
 				dead = false;
 				playerSprite.sprite = spriteStand;
+			}
+
+			if (opponentBullets != null) {
+				for (int i = 0; i < opponentBullets.Count; i++) {
+					GameObject bullet = opponentBullets[i];
+					if (bullet == null) {
+						opponentBullets.RemoveAt(i);
+						continue;
+					}
+					if (bullet.collider.bounds.Intersects(collider.bounds)) {
+						Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
+						direction.Normalize();
+						Push(direction * attackForce);
+						opponentBullets.RemoveAt(i);
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -243,6 +268,11 @@ public class Controls : MonoBehaviour
 	void Attack ()
 	{
 
+		// Bullets
+		if (Input.GetKeyDown(inputAttackBullet)) {
+			FireBullet();
+		}
+
 		// Attack
 		if (Input.GetButtonDown(inputAttackName) && !ducking) {
 			playerSprite.sprite = spriteAttack;
@@ -311,5 +341,20 @@ public class Controls : MonoBehaviour
 		dead = true;
 		deadLast = Time.time;
 		playerSprite.sprite = spriteDead;
+	}
+
+	private void FireBullet () {
+		GameObject bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity) as GameObject;
+		bullet.transform.localScale = transform.localScale;
+
+		Vector3 direction = Vector3.right * transform.localScale.x;
+		direction.Normalize();
+		bullet.rigidbody.AddForce(direction * bulletForce, ForceMode.Impulse);
+
+		List<GameObject> playerBullets = Manager.Instance.BulletsPlayer1;
+		playerBullets.Add(bullet);
+		Manager.Instance.BulletsPlayer1 = playerBullets;
+
+		Destroy(bullet, 5.0f);
 	}
 }
