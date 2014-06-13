@@ -4,10 +4,13 @@ using System.Collections.Generic;
 
 public class Controls : MonoBehaviour
 {
-	public Sprite batmanStand;
-	public Sprite batmanDuck;
-	public Sprite batmanAttack;
+	public Sprite spriteStand;
+	public Sprite spriteDuck;
+	public Sprite spriteAttack;
+	public Sprite spriteDead;
+	public GameObject bulletPrefab;
 
+	public bool player1 = true;
 	public bool snap = false;
 	public bool attack = false;
 
@@ -18,6 +21,12 @@ public class Controls : MonoBehaviour
 	private SpriteRenderer attackSprite;
 	private BoxCollider attackCollider;
 	private GameObject blocSnapped;
+
+	private GameObject opponent;
+	private List<GameObject> opponentBullets;
+	public List<GameObject> OppenentBullets {
+		set { opponentBullets = value; }
+	}
 
 	private bool collisionDown = false;
 	private bool collisionLeft = false;
@@ -30,9 +39,9 @@ public class Controls : MonoBehaviour
 	private float speed = 4.5f;
 	private float jump = 40.5f;
 	private float dragAir = 0.95f;
-	private float dragGround = 0.75f;
+	//private float dragGround = 0.75f;
 	private float gravity = 0.0038f;
-	private const float VELOCITY_MAX = 0.088f;
+	private const float VELOCITY_MAX = 0.098f;
 	private const float JUMP_MAX = 0.158f;
 	private const float GRAVITY_MAX = 0.268f;
 	private const float VELOCITY_COLLISION_OFFSET = 0.5f; // like a bias : distance of the overlap between player bounds and bloc bounds
@@ -44,6 +53,18 @@ public class Controls : MonoBehaviour
 	private float attackDelay = 0.5f;
 	private float attackLast = 0.0f;
 	private float attackForce = 10.0f;
+	private float bulletForce = 10.0f;
+
+	private float deadDelay = 0.5f;
+	private float deadLast = 0.0f;
+	private bool dead = false;
+
+	private string inputHorizontalName = "Horizontal";
+	private string inputVerticalName = "Vertical";
+	private string inputAttackName = "Fire1";
+	private KeyCode inputAttackBullet = KeyCode.E;
+
+	public bool freeze = false;
 
 	// Use this for initialization
 	void Start ()
@@ -57,8 +78,17 @@ public class Controls : MonoBehaviour
 		playerSprite = GetComponent<SpriteRenderer>();
 		attackSprite = transform.Find("Attack").GetComponent<SpriteRenderer>();
 		attackCollider = attackSprite.GetComponent<BoxCollider>();
+
+		opponent = Manager.Instance.GetOpponent(player1);
+
+		if (!player1) {
+			inputHorizontalName = "Horizontal2";
+			inputVerticalName = "Vertical2";
+			inputAttackName = "Fire2";
+			inputAttackBullet = KeyCode.O;
+		}
 		
-		if (batmanStand == null || batmanDuck == null || batmanAttack == null) {
+		if (!spriteStand || !spriteDuck || !spriteAttack || !spriteDead) {
 			Debug.Log("*Woops* public links broken");
 		}
 	}
@@ -66,17 +96,40 @@ public class Controls : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
+		if (!freeze)
+		{
+			CheckCollisions();
 
-		CheckCollisions();
+			UpdateMovement();
 
-		UpdateMovement();
+			if (attack && !dead) Attack();
 
-		if (attack) Attack();
+			if (transform.position.y < -7.0f) {
+				RespawnPlayer();
+			}
 
-		if (transform.position.y < -7.0f) {
-			RespawnPlayer();
+			if (dead && deadLast + deadDelay < Time.time) {
+				dead = false;
+				playerSprite.sprite = spriteStand;
+			}
+
+			if (opponentBullets != null) {
+				for (int i = 0; i < opponentBullets.Count; i++) {
+					GameObject bullet = opponentBullets[i];
+					if (bullet == null) {
+						opponentBullets.RemoveAt(i);
+						continue;
+					}
+					if (bullet.collider.bounds.Intersects(collider.bounds)) {
+						Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
+						direction.Normalize();
+						Push(direction * attackForce);
+						opponentBullets.RemoveAt(i);
+						break;
+					}
+				}
+			}
 		}
-
 	}
 
 	void RespawnPlayer ()
@@ -146,11 +199,18 @@ public class Controls : MonoBehaviour
 	{
 
 		// Inputs
-		input.x = Input.GetAxis("Horizontal") * Time.deltaTime * speed;
-		input.y = Input.GetAxis("Vertical") * Time.deltaTime * speed;
+
+		if (!dead) {
+			input.x = Input.GetAxis(inputHorizontalName) * Time.deltaTime * speed;
+			input.y = Input.GetAxis(inputVerticalName) * Time.deltaTime * speed;
+		} else {
+			input.x = 0f;
+			input.y = 0f;
+		}
 
 		// Velocity Horizontal
 		velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
+		
 
 		// In Air
 		if (!collisionDown)
@@ -163,7 +223,8 @@ public class Controls : MonoBehaviour
 		// On Ground
 		else
 		{
-			if (!collisionUp && (input.y > 0.0f || Input.GetButtonDown("Jump"))) {
+			// Jump
+			if (!dead && !collisionUp && input.y > 0.0f) {
 				velocity.y =  Mathf.Max(-GRAVITY_MAX, Mathf.Min(jump, JUMP_MAX));
 				collisionDown = false;
 			} else {
@@ -171,13 +232,15 @@ public class Controls : MonoBehaviour
 			}
 
 			// Velocity Horizontal Ground Drag
-			velocity.x *= dragGround;
+			//if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
+				//velocity.x *= dragGround;
+			//}
 		}
 
 		// Duck
 		if (input.y < 0.0f && playerCollider.size.y > rectDuck.height)
 		{
-			playerSprite.sprite = batmanDuck;
+			playerSprite.sprite = spriteDuck;
 			playerCollider.center = new Vector2(rectDuck.x, rectDuck.y);
 			playerCollider.size = new Vector2(rectDuck.width, rectDuck.height);
 			ducking = true;
@@ -185,7 +248,7 @@ public class Controls : MonoBehaviour
 		// Stand
 		else if (!collisionUp && input.y >= 0.0f && playerCollider.size.y < rectStand.height )
 		{
-			playerSprite.sprite = batmanStand;
+			playerSprite.sprite = spriteStand;
 			playerCollider.center = new Vector2(rectStand.x, rectStand.y);
 			playerCollider.size = new Vector2(rectStand.width, rectStand.height);
 			ducking = false;
@@ -205,20 +268,38 @@ public class Controls : MonoBehaviour
 	void Attack ()
 	{
 
+		// Bullets
+		if (Input.GetKeyDown(inputAttackBullet)) {
+			FireBullet();
+		}
+
 		// Attack
-		if (Input.GetButtonDown("Fire1") && !ducking) {
-			playerSprite.sprite = batmanAttack;
+		if (Input.GetButtonDown(inputAttackName) && !ducking) {
+			playerSprite.sprite = spriteAttack;
 			attackSprite.enabled = true;
 			attackLast = Time.time;
 		}
 
 		// Stop Attacking
 		if (attackLast + attackDelay < Time.time) {
-			playerSprite.sprite = ducking ? batmanDuck : batmanStand;
+			playerSprite.sprite = ducking ? spriteDuck : spriteStand;
 			attackSprite.enabled = false;
 		}
 		// Attacking
 		else {
+
+			//
+			Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
+			direction.Normalize();
+
+			// Opponent
+			if (opponent) {
+				if (opponent.collider.bounds.Intersects(collider.bounds)) {
+					opponent.GetComponent<Controls>().Push(direction * 10.0f);
+				}
+			} 
+
+			// Blocs
 			for (int i = 0; i < blocs.Count; i++)
 			{
 				GameObject bloc = blocs[i];
@@ -237,8 +318,6 @@ public class Controls : MonoBehaviour
 
 					// Push
 					//Vector3 direction = bloc.transform.position - attackCollider.transform.position;
-					Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
-					direction.Normalize();
 					bloc.GetComponent<Rigidbody>().AddForce(direction * attackForce, ForceMode.Impulse);
 					bloc.GetComponent<Rigidbody>().AddTorque(Vector3.forward * Random.Range(-attackForce, attackForce), ForceMode.Impulse);
 
@@ -248,5 +327,34 @@ public class Controls : MonoBehaviour
 				}
 			}
 		}
+	}
+
+	public void Push(Vector3 direction) {
+
+		collisionDown = false;
+		collisionUp = false;
+		collisionRight = false;
+		collisionLeft = false;
+		transform.position += new Vector3(0f, VELOCITY_COLLISION_OFFSET, 0f);
+		velocity = direction;
+
+		dead = true;
+		deadLast = Time.time;
+		playerSprite.sprite = spriteDead;
+	}
+
+	private void FireBullet () {
+		GameObject bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity) as GameObject;
+		bullet.transform.localScale = transform.localScale;
+
+		Vector3 direction = Vector3.right * transform.localScale.x;
+		direction.Normalize();
+		bullet.rigidbody.AddForce(direction * bulletForce, ForceMode.Impulse);
+
+		List<GameObject> playerBullets = Manager.Instance.BulletsPlayer1;
+		playerBullets.Add(bullet);
+		Manager.Instance.BulletsPlayer1 = playerBullets;
+
+		Destroy(bullet, 5.0f);
 	}
 }

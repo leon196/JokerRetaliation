@@ -17,7 +17,7 @@ public class Button : MonoBehaviour
 	
 	void OnMouseDown()
 	{
-		print("wazaaaaaa");
+		//print("wazaaaaaa");
         if (!NextScene.Equals(""))
             Application.LoadLevel(NextScene);
         /*if (this.name.Equals("Return"))
