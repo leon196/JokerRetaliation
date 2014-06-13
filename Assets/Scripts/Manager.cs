@@ -29,6 +29,21 @@ public class Manager : MonoBehaviour {
 		}
 	}
 
+	public GameObject GetPlayer(bool isPlayer1) {
+		GameObject player = null;
+		Controls[] controls = this.Controls;
+		foreach (Controls control in controls) {
+			if (isPlayer1 && control.player1) {
+				player = control.gameObject;
+				break;
+			} else if (!isPlayer1 && !control.player1) {
+				player = control.gameObject;
+				break;
+			}
+		}
+		return player;
+	}
+
 	private Scroll _scroll;
 	public Scroll Scroll {
 		get {
