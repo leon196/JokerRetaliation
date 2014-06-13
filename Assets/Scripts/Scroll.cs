@@ -5,11 +5,9 @@ using System.Collections.Generic;
 public class Scroll : MonoBehaviour {
 
 	public GameObject blocPrefab;
-	private List<GameObject> blocsGround;
-	private List<GameObject> blocsObstacle;
+	private List<GameObject> blocs;
 
 	public float scroolSpeed = 3.0f;
-	private float timeDelay = 3f;
 	private float blocSize = 1.28f;
 	private float startX = 9.0f;
 	private float endX = -9.0f;
@@ -21,8 +19,7 @@ public class Scroll : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		blocsGround = new List<GameObject>();	
-		blocsObstacle = new List<GameObject>();
+		blocs = new List<GameObject>();	
 
 		// Ground
 		for (int i = 0; i < 14; i++) {
@@ -31,16 +28,16 @@ public class Scroll : MonoBehaviour {
 			GameObject bloc = Instantiate(blocPrefab, new Vector3(endX + i * blocSize, groundY + randomY, 0f), Quaternion.identity) as GameObject;
 			bloc.name = "Bloc";
 			bloc.transform.parent = transform;
-			blocsGround.Add(bloc);
+			blocs.Add(bloc);
 		}
 
-		Manager.Instance.Blocs = blocsGround;
+		Manager.Instance.Blocs = blocs;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		if (!freeze) {
-			foreach (GameObject blocGround in blocsGround) {
+			foreach (GameObject blocGround in blocs) {
 				blocGround.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
 				if (blocGround.transform.position.x < endX) {
 					float randomY = Random.Range(0.0f, randomRange);
