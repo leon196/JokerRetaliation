@@ -63,7 +63,7 @@ public class UI : MonoBehaviour {
 		if (is_pause) 
 		{
 			GUI.Label (new Rect (Screen.width/2-50, 200, 100, 30), "Pause", pause_style);
-			if (GUI.Button(new Rect(Screen.width/2-50, 300, 100, 30), "Main Menu", main_menu_style))
+			if (GUI.Button(new Rect(Screen.width/2-60, 300, 100, 30), "Main Menu", main_menu_style))
 			{
 				Application.LoadLevel("MainMenu");
 			}
