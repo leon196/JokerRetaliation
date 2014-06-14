@@ -51,6 +51,7 @@ public class Controls : MonoBehaviour
 	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
 	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
 
+	private bool attacking = false;
 	private float attackDelay = 0.5f;
 	private float attackLast = 0.0f;
 	private float attackForce = 10.0f;
@@ -110,7 +111,7 @@ public class Controls : MonoBehaviour
 
 			if (attack && !dead) Attack();
 
-			if (transform.position.y < -7.0f) {
+			if (transform.position.y < Manager.ScreenBottom) {
 				RespawnPlayer();
 			}
 
@@ -140,7 +141,7 @@ public class Controls : MonoBehaviour
 
 	void RespawnPlayer ()
 	{
-		transform.position = new Vector3();
+		transform.position = Manager.PlayerSpawn;
 		velocity = new Vector3();
 		collisionDown = false;
 		collisionUp = false;
@@ -271,6 +272,11 @@ public class Controls : MonoBehaviour
 		} 
 	}
 
+	void StopAttack() {
+		attacking = false;
+		attackLast = Time.time-attackDelay + 0.1f;
+	}
+
 	void Attack ()
 	{
 
@@ -284,15 +290,18 @@ public class Controls : MonoBehaviour
 			playerSprite.sprite = spriteAttack;
 			attackSprite.enabled = true;
 			attackLast = Time.time;
+			attacking = true;
 		}
 
 		// Stop Attacking
 		if (attackLast + attackDelay < Time.time) {
 			playerSprite.sprite = ducking ? spriteDuck : spriteStand;
 			attackSprite.enabled = false;
+			StopAttack();
+			return;
 		}
 		// Attacking
-		else {
+		if (attacking) {
 
 			//
 			Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
@@ -302,18 +311,31 @@ public class Controls : MonoBehaviour
 			if (opponent) {
 				if (opponent.collider.bounds.Intersects(collider.bounds)) {
 					opponent.GetComponent<Controls>().Push(direction * 10.0f);
+					StopAttack();
+					return;
 				}
 			} 
-/*
+
+			// Helicopter
+			RocketLauncher helicopter = Manager.Instance.RocketLauncher;
+			if (helicopter.collider.bounds.Intersects(playerCollider.bounds)) {
+				Explosion((helicopter.transform.position + transform.position) / 2.0f);
+				StopAttack();
+				return;
+			}
+
+			// Rockets
 			List<GameObject> rockets = Manager.Instance.RocketLauncherRockets;
 			for (int i = 0; i < rockets.Count; i++) {
 				GameObject rocket = rockets[i];
 				if (attackCollider.bounds.Intersects(rocket.collider.bounds)) {
 					Manager.Instance.DestroyRocket(rocket, i);
-					continue;
+					Explosion(rocket.transform.position);
+					StopAttack();
+					return;
 				}
 			}
-*/
+
 			// Blocs
 			for (int i = 0; i < blocs.Count; i++)
 			{
@@ -339,7 +361,8 @@ public class Controls : MonoBehaviour
 					// Kill
 					Destroy(bloc, 5.0f);
 					blocs.Remove(bloc);
-					continue;
+					StopAttack();
+					return;
 				}
 			}
 		}
@@ -358,8 +381,12 @@ public class Controls : MonoBehaviour
 		deadLast = Time.time;
 		playerSprite.sprite = spriteDead;
 
+		Explosion(new Vector3(transform.position.x, collider.bounds.min.y, 0f));
+	}
+
+	public void Explosion (Vector3 position) {
 		GameObject explosion = Instantiate(explosionPrefab) as GameObject;
-		explosion.transform.position = new Vector3(transform.position.x, collider.bounds.min.y, 0f);
+		explosion.transform.position = position;
 	}
 
 	private void FireBullet () {

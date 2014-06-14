@@ -62,6 +62,7 @@ public class RocketLauncher : MonoBehaviour {
 		ParticleSystem rocketParticle = rocket.GetComponentInChildren<ParticleSystem>();
 		rocketParticle.transform.parent = null;
 		rocketParticle.Stop();
+		Destroy(rocketParticle, 3.0f);
 		Destroy(rocket);
 	}
 }

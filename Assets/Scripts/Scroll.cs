@@ -9,9 +9,6 @@ public class Scroll : MonoBehaviour {
 
 	public float scroolSpeed = 3.0f;
 	private float blocSize = 1.28f;
-	private float startX = 9.0f;
-	private float endX = -9.0f;
-	private float groundY = -3.8f;
 
 	private float randomRange = 1.0f;
 
@@ -26,7 +23,7 @@ public class Scroll : MonoBehaviour {
 		for (int i = 0; i < 14; i++) {
 
 			float randomY = Random.Range(0.0f, randomRange);
-			GameObject bloc = Instantiate(blocPrefab, new Vector3(endX + i * blocSize, groundY + randomY, 0f), Quaternion.identity) as GameObject;
+			GameObject bloc = Instantiate(blocPrefab, new Vector3(Manager.ScreenLeft + i * blocSize, Manager.Ground + randomY, 0f), Quaternion.identity) as GameObject;
 			bloc.name = "Bloc";
 			bloc.transform.parent = transform;
 			blocs.Add(bloc);
@@ -40,9 +37,9 @@ public class Scroll : MonoBehaviour {
 		if (!freeze) {
 			foreach (GameObject bloc in blocs) {
 				bloc.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
-				if (bloc.transform.position.x < endX) {
+				if (bloc.transform.position.x < Manager.ScreenLeft) {
 					float randomY = Random.Range(0.0f, randomRange);
-					bloc.transform.position = new Vector3(startX, groundY + randomY, 0f);
+					bloc.transform.position = new Vector3(Manager.ScreenRight, Manager.Ground + randomY, 0f);
 /*
 					if (bloc.GetComponent<GenericAnimation>() == null && Random.Range(0.0f, 1.0f) > 0.75f) {
 						bloc.AddComponent<GenericAnimation>();

@@ -12,8 +12,10 @@ public class GenericAnimation : MonoBehaviour {
 	public float radiusTranslate = 4.0f;
 	public float speedTranslate = 0.7f;
 
+	private Vector3 origin;
+
 	void Start () {
-	
+		origin = transform.position;	
 	}
 	
 	void Update ()
@@ -32,7 +34,7 @@ public class GenericAnimation : MonoBehaviour {
 			y += Mathf.Cos(Time.time * speedTranslate) * radiusTranslate;
 		}
 
-		transform.position = new Vector3(x, y, 0f);
+		transform.position = origin + new Vector3(x, y, 0f);
 
 		if (orientation) {
 			if (x < 0.0f) {
