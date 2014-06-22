@@ -7,11 +7,16 @@ public class GenerationScroll : MonoBehaviour {
 
 	public GameObject blocPrefab;
 	private List<GameObject> _blocs;
-	private float posYTop = 0f;
-	private float posYBottom = -1.28f;
+	private float posYTop = -1f;
+	private float posYBottom = -2f;
 
 	public float scroolSpeed = 3.0f;
 	private float blocSize = 1.28f;
+	private int lengthBlocs = 14;
+	private int switchCounter = 2;
+	private int counter = 0;
+	private int prefabIndex = -1;
+	private int prefabPartIndex = -1;
 
 	public bool freeze = false;
 
@@ -19,7 +24,7 @@ public class GenerationScroll : MonoBehaviour {
 	{		
 		_blocs = new List<GameObject>();
 		
-		for(int i = 0; i < 14; i++)
+		for(int i = 0; i < lengthBlocs; i++)
 		{
 			GameObject blocTemp = (GameObject) Instantiate(blocPrefab, new Vector3(Manager.ScreenLeft + (i * blocSize), Manager.Ground + posYBottom, 0.0f), Quaternion.identity);
 			blocTemp.SetActive(true);
@@ -47,42 +52,124 @@ public class GenerationScroll : MonoBehaviour {
 		if (!freeze) {
 			foreach (GameObject bloc in _blocs) {
 				bloc.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
-				if (bloc.transform.position.x < Manager.ScreenLeft) {
-					//float randomY = Random.Range(0.0f, randomRange);
 
-					int randomNumber = Random.Range(0, 4);
-					
-					switch(randomNumber)
+				if (bloc.transform.position.x < Manager.ScreenLeft) {
+
+					if(counter < switchCounter)
 					{
-					case 0:
-					{
-						bloc.transform.position = new Vector3(Manager.ScreenRight, Manager.Ground + posYTop, 0f);
-						bloc.SetActive(true);
-						break;
-					}
+						//Random
+						int randomNumber = Random.Range(0, 4);
 						
-					case 1:
-					{
-						bloc.transform.position = new Vector3(Manager.ScreenRight, Manager.Ground + posYTop, 0f);
-						bloc.SetActive(false);
-						break;
+						switch(randomNumber)
+						{
+						case 0:
+						{
+							bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYTop, 0f);
+							bloc.SetActive(true);
+							break;
+						}
+							
+						case 1:
+						{
+							bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYTop, 0f);
+							bloc.SetActive(false);
+							break;
+						}
+							
+						case 2:
+						{
+							bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYBottom, 0f);
+							bloc.SetActive(true);
+							break;
+						}
+							
+						case 3:
+						{
+							bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYBottom, 0f);
+							bloc.SetActive(false);
+							break;
+						}
+						}
 					}
+					else
+					{
+						//Prefab
+						if(prefabIndex == -1) prefabIndex = Random.Range(0, 4);
 						
-					case 2:
-					{
-						bloc.transform.position = new Vector3(Manager.ScreenRight, Manager.Ground + posYBottom, 0f);
-						bloc.SetActive(true);
-						break;
+						switch(prefabIndex)
+						{
+							case 0:
+							{
+								bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYBottom, 0f);
+								bloc.SetActive(true);
+								prefabPartIndex++;
+
+								if(prefabPartIndex == 2)
+								{
+									prefabIndex = prefabPartIndex = -1;
+								}
+
+								break;
+							}
+
+							case 1:
+							{
+								bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYTop, 0f);
+								bloc.SetActive(true);
+								prefabPartIndex++;
+								
+								if(prefabPartIndex == 2)
+								{
+									prefabIndex = prefabPartIndex = -1;
+								}
+								
+								break;
+							}
+
+							case 2:
+							{
+								if(prefabPartIndex < 2)
+								{
+									bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYBottom, 0f);
+									bloc.SetActive(true);
+									prefabPartIndex++;
+								}
+								else if(prefabPartIndex == 2)
+								{
+									bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYTop, 0f);
+									bloc.SetActive(true);
+									prefabPartIndex++;
+									prefabIndex = prefabPartIndex = -1;
+								}
+								
+								break;
+							}
+
+							case 3:
+							{
+								if(prefabPartIndex < 2)
+								{
+									bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYTop, 0f);
+									bloc.SetActive(true);
+									prefabPartIndex++;
+								}
+								else if(prefabPartIndex == 2)
+								{
+									bloc.transform.position = new Vector3(Manager.ScreenLeft + (lengthBlocs * blocSize), Manager.Ground + posYBottom, 0f);
+									bloc.SetActive(true);
+									prefabPartIndex++;
+									prefabIndex = prefabPartIndex = -1;
+								}
+								
+								break;
+							}
+						}
 					}
-						
-					case 3:
-					{
-						bloc.transform.position = new Vector3(Manager.ScreenRight, Manager.Ground + posYBottom, 0f);
-						bloc.SetActive(false);
-						break;
-					}
-					}
+
+					if(counter < lengthBlocs) counter++; else counter = 0;
 				}
+
+
 			}
 		}
 	}
