@@ -17,6 +17,7 @@ public class IA : MonoBehaviour {
     int _costHorizon = 10;
     int _costDiag = 15;
     float _widthBloc;
+    float _offset = 0.1f;
 
 	// Use this for initialization
 	void Start () {
@@ -37,13 +38,8 @@ public class IA : MonoBehaviour {
             Vector3 target = path.First();
             this.transform.position = target;
 
-            /*while (Mathf.Abs(target.x - this.transform.position.x) > 0.1)
-            {
-                this.transform.position += target * Time.deltaTime;
-            }*/
-
             path.RemoveAt(0);
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(0.1f);
         }
     }
 
@@ -77,19 +73,25 @@ public class IA : MonoBehaviour {
 
         List<Vector3> allNodes = new List<Vector3>();
 
-        for (float x = (xMin - _widthBloc); x <= xMax + 0.5; x += _widthBloc)
+        /*for (float x = (xMin - _offset); x <= xMax + 0.5; x += _offset)
         {
-            for (float y = yMin; y <= yMax + _widthBloc + 0.5; y += _widthBloc)
+            for (float y = yMin; y <= yMax + _offset + 0.5; y += _offset)
             {
                 allNodes.Add(new Vector3(x, y, zBloc));
             }
+        }*/
+
+        foreach (var o in obstacles)
+        {
+            allNodes.Add(new Vector3(o.transform.position.x, o.transform.position.y, o.transform.position.z));
+            allNodes.Add(new Vector3(o.transform.position.x, o.transform.position.y + _widthBloc, o.transform.position.z));
         }
 
         Node startingNode = new Node();
         startingNode.pos = allNodes.Where(n =>
-            n.x >= startPoint.x && n.x <= startPoint.x + _widthBloc
+            n.x >= startPoint.x && n.x <= startPoint.x + _offset
             &&
-            n.y >= startPoint.y && n.y <= startPoint.y + _widthBloc).First();
+            n.y >= startPoint.y && n.y <= startPoint.y + _offset).First();
         startingNode.cost = 0;
 
         var l = obstacles.Select(o => o.transform.position).ToList();
@@ -101,13 +103,8 @@ public class IA : MonoBehaviour {
         List<Node> closedList = new List<Node>();
         bool foundTheEnd = false;
 
-        /*var s = allNodes.Where(w => Mathf.Abs(w.x-6.2f) < 0.1).ToList();
-        foreach (var w in s)
-        {
-            print(w + " || " + endPoint);
-            if (w.x == endPoint.x)
-                print("yosh");
-        }*/
+        foreach (var n in allNodes)
+            print(n);
 
         while(!foundTheEnd && openList.Count > 0)
         {
@@ -158,24 +155,24 @@ public class IA : MonoBehaviour {
     List<Node> FindPossibleNodes(Node current, List<Vector3> obstacles, List<Vector3> allNodes, List<Node> closed)
     {
         bool obstacleRight = obstacles.Any(o =>
-            (o.x >= current.pos.x + _widthBloc && o.x <= current.pos.x + _widthBloc * 2)
+            (o.x >= current.pos.x + _offset && o.x <= current.pos.x + _offset * 2)
             &&
-            (o.y >= current.pos.y && o.y <= current.pos.y + _widthBloc)
+            (o.y >= current.pos.y && o.y <= current.pos.y + _offset)
             );
         bool obstacleLeft = obstacles.Any(o =>
-            (o.x <= current.pos.x - _widthBloc && o.x <= current.pos.x - _widthBloc * 2)
+            (o.x <= current.pos.x - _offset && o.x <= current.pos.x - _offset * 2)
             &&
-            (o.y >= current.pos.y && o.y <= current.pos.y + _widthBloc)
+            (o.y >= current.pos.y && o.y <= current.pos.y + _offset)
             );
         bool obstacleTop = obstacles.Any(o =>
-            (o.x >= current.pos.x && o.x <= current.pos.x + _widthBloc)
+            (o.x >= current.pos.x && o.x <= current.pos.x + _offset)
             &&
-            (o.y >= current.pos.y + _widthBloc && o.y <= current.pos.y + _widthBloc * 2)
+            (o.y >= current.pos.y + _offset && o.y <= current.pos.y + _offset * 2)
             );
         bool obstacleBottom = obstacles.Any(o =>
-            (o.x >= current.pos.x && o.x <= current.pos.x + _widthBloc)
+            (o.x >= current.pos.x && o.x <= current.pos.x + _offset)
             &&
-            (o.y >= current.pos.y - _widthBloc && o.y <= current.pos.y - _widthBloc * 2)
+            (o.y >= current.pos.y - _offset && o.y <= current.pos.y - _offset * 2)
             );
 
         List<Node> returnList = new List<Node>();
@@ -184,7 +181,7 @@ public class IA : MonoBehaviour {
 
         if (!obstacleRight)
         {
-            addNode.pos = new Vector3(current.pos.x + _widthBloc, current.pos.y, current.pos.z);
+            addNode.pos = new Vector3(current.pos.x + _offset, current.pos.y, current.pos.z);
             addNode.parent = current.pos;
             addNode.cost = _costHorizon;
             returnList.Add(addNode);
@@ -192,7 +189,7 @@ public class IA : MonoBehaviour {
 
         if (!obstacleLeft)
         {
-            addNode.pos = new Vector3(current.pos.x - _widthBloc, current.pos.y, current.pos.z);
+            addNode.pos = new Vector3(current.pos.x - _offset, current.pos.y, current.pos.z);
             addNode.parent = current.pos;
             addNode.cost = _costHorizon;
             returnList.Add(addNode);
@@ -200,14 +197,14 @@ public class IA : MonoBehaviour {
 
         if (!obstacleTop)
         {
-            addNode.pos = new Vector3(current.pos.x, current.pos.y + _widthBloc, current.pos.z);
+            addNode.pos = new Vector3(current.pos.x, current.pos.y + _offset, current.pos.z);
             addNode.parent = current.pos;
             addNode.cost = _costHorizon;
             returnList.Add(addNode);
 
             if (!obstacleRight)
             {
-                addNode.pos = new Vector3(current.pos.x + _widthBloc, current.pos.y + _widthBloc, current.pos.z);
+                addNode.pos = new Vector3(current.pos.x + _offset, current.pos.y + _offset, current.pos.z);
                 addNode.parent = current.pos;
                 addNode.cost = _costDiag;
                 returnList.Add(addNode);
@@ -215,7 +212,7 @@ public class IA : MonoBehaviour {
 
             if (!obstacleLeft)
             {
-                addNode.pos = new Vector3(current.pos.x - _widthBloc, current.pos.y + _widthBloc, current.pos.z);
+                addNode.pos = new Vector3(current.pos.x - _offset, current.pos.y + _offset, current.pos.z);
                 addNode.parent = current.pos;
                 addNode.cost = _costDiag;
                 returnList.Add(addNode);
@@ -224,14 +221,14 @@ public class IA : MonoBehaviour {
 
         if (!obstacleBottom)
         {
-            addNode.pos = new Vector3(current.pos.x, current.pos.y - _widthBloc, current.pos.z);
+            addNode.pos = new Vector3(current.pos.x, current.pos.y - _offset, current.pos.z);
             addNode.parent = current.pos;
             addNode.cost = _costHorizon;
             returnList.Add(addNode);
 
             if (!obstacleRight)
             {
-                addNode.pos = new Vector3(current.pos.x + _widthBloc, current.pos.y - _widthBloc, current.pos.z);
+                addNode.pos = new Vector3(current.pos.x + _offset, current.pos.y - _offset, current.pos.z);
                 addNode.parent = current.pos;
                 addNode.cost = _costDiag;
                 returnList.Add(addNode);
@@ -239,7 +236,7 @@ public class IA : MonoBehaviour {
 
             if (!obstacleLeft)
             {
-                addNode.pos = new Vector3(current.pos.x - _widthBloc, current.pos.y - _widthBloc, current.pos.z);
+                addNode.pos = new Vector3(current.pos.x - _offset, current.pos.y - _offset, current.pos.z);
                 addNode.parent = current.pos;
                 addNode.cost = _costDiag;
                 returnList.Add(addNode);
