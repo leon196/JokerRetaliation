@@ -9,6 +9,7 @@ public class Controls : MonoBehaviour
 	public Sprite spriteAttack;
 	public Sprite spriteDead;
 	public GameObject bulletPrefab;
+	public GameObject explosionPrefab;
 
 	public bool player1 = true;
 	public bool snap = false;
@@ -39,7 +40,7 @@ public class Controls : MonoBehaviour
 	private float speed = 4.5f;
 	private float jump = 40.5f;
 	private float dragAir = 0.95f;
-	//private float dragGround = 0.75f;
+	private float dragGround = 0.75f;
 	private float gravity = 0.0038f;
 	private const float VELOCITY_MAX = 0.098f;
 	private const float JUMP_MAX = 0.158f;
@@ -50,6 +51,7 @@ public class Controls : MonoBehaviour
 	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
 	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
 
+	private bool attacking = false;
 	private float attackDelay = 0.5f;
 	private float attackLast = 0.0f;
 	private float attackForce = 10.0f;
@@ -61,8 +63,8 @@ public class Controls : MonoBehaviour
 
 	private string inputHorizontalName = "Horizontal";
 	private string inputVerticalName = "Vertical";
-	private string inputAttackName = "Fire1";
-	private KeyCode inputAttackBullet = KeyCode.E;
+	private KeyCode inputAttack = KeyCode.F;
+	private KeyCode inputAttackBullet = KeyCode.R;
 
 	public bool freeze = false;
 
@@ -84,8 +86,8 @@ public class Controls : MonoBehaviour
 		if (!player1) {
 			inputHorizontalName = "Horizontal2";
 			inputVerticalName = "Vertical2";
-			inputAttackName = "Fire2";
-			inputAttackBullet = KeyCode.O;
+			inputAttack = KeyCode.K;
+			inputAttackBullet = KeyCode.L;
 		}
 		
 		if (!spriteStand || !spriteDuck || !spriteAttack || !spriteDead) {
@@ -96,6 +98,11 @@ public class Controls : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
+		
+	   if (Input.GetKeyDown(KeyCode.Escape)) {
+            Application.LoadLevel(0);
+       }
+		
 		if (!freeze)
 		{
 			CheckCollisions();
@@ -104,7 +111,7 @@ public class Controls : MonoBehaviour
 
 			if (attack && !dead) Attack();
 
-			if (transform.position.y < -7.0f) {
+			if (transform.position.y < Manager.ScreenBottom) {
 				RespawnPlayer();
 			}
 
@@ -134,7 +141,7 @@ public class Controls : MonoBehaviour
 
 	void RespawnPlayer ()
 	{
-		transform.position = new Vector3();
+		transform.position = Manager.PlayerSpawn;
 		velocity = new Vector3();
 		collisionDown = false;
 		collisionUp = false;
@@ -232,9 +239,9 @@ public class Controls : MonoBehaviour
 			}
 
 			// Velocity Horizontal Ground Drag
-			//if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
-				//velocity.x *= dragGround;
-			//}
+			if (Mathf.Abs(Input.GetAxis(inputHorizontalName)) < 0.1f) {
+				velocity.x *= dragGround;
+			}
 		}
 
 		// Duck
@@ -265,6 +272,11 @@ public class Controls : MonoBehaviour
 		} 
 	}
 
+	void StopAttack() {
+		attacking = false;
+		attackLast = Time.time-attackDelay + 0.1f;
+	}
+
 	void Attack ()
 	{
 
@@ -274,19 +286,22 @@ public class Controls : MonoBehaviour
 		}
 
 		// Attack
-		if (Input.GetButtonDown(inputAttackName) && !ducking) {
+		if (Input.GetKeyDown(inputAttack) && !ducking) {
 			playerSprite.sprite = spriteAttack;
 			attackSprite.enabled = true;
 			attackLast = Time.time;
+			attacking = true;
 		}
 
 		// Stop Attacking
 		if (attackLast + attackDelay < Time.time) {
 			playerSprite.sprite = ducking ? spriteDuck : spriteStand;
 			attackSprite.enabled = false;
+			StopAttack();
+			return;
 		}
 		// Attacking
-		else {
+		if (attacking) {
 
 			//
 			Vector3 direction = Vector3.up + Vector3.right * transform.localScale.x;
@@ -296,8 +311,30 @@ public class Controls : MonoBehaviour
 			if (opponent) {
 				if (opponent.collider.bounds.Intersects(collider.bounds)) {
 					opponent.GetComponent<Controls>().Push(direction * 10.0f);
+					StopAttack();
+					return;
 				}
 			} 
+
+			// Helicopter
+			RocketLauncher helicopter = Manager.Instance.RocketLauncher;
+			if (helicopter.collider.bounds.Intersects(playerCollider.bounds)) {
+				Explosion((helicopter.transform.position + transform.position) / 2.0f);
+				StopAttack();
+				return;
+			}
+
+			// Rockets
+			List<GameObject> rockets = Manager.Instance.RocketLauncherRockets;
+			for (int i = 0; i < rockets.Count; i++) {
+				GameObject rocket = rockets[i];
+				if (attackCollider.bounds.Intersects(rocket.collider.bounds)) {
+					Manager.Instance.DestroyRocket(rocket, i);
+					Explosion(rocket.transform.position);
+					StopAttack();
+					return;
+				}
+			}
 
 			// Blocs
 			for (int i = 0; i < blocs.Count; i++)
@@ -324,6 +361,8 @@ public class Controls : MonoBehaviour
 					// Kill
 					Destroy(bloc, 5.0f);
 					blocs.Remove(bloc);
+					StopAttack();
+					return;
 				}
 			}
 		}
@@ -341,6 +380,13 @@ public class Controls : MonoBehaviour
 		dead = true;
 		deadLast = Time.time;
 		playerSprite.sprite = spriteDead;
+
+		Explosion(new Vector3(transform.position.x, collider.bounds.min.y, 0f));
+	}
+
+	public void Explosion (Vector3 position) {
+		GameObject explosion = Instantiate(explosionPrefab) as GameObject;
+		explosion.transform.position = position;
 	}
 
 	private void FireBullet () {
@@ -351,9 +397,15 @@ public class Controls : MonoBehaviour
 		direction.Normalize();
 		bullet.rigidbody.AddForce(direction * bulletForce, ForceMode.Impulse);
 
-		List<GameObject> playerBullets = Manager.Instance.BulletsPlayer1;
-		playerBullets.Add(bullet);
-		Manager.Instance.BulletsPlayer1 = playerBullets;
+		if (player1) {
+			List<GameObject> playerBullets = Manager.Instance.BulletsPlayer1;
+			playerBullets.Add(bullet);
+			Manager.Instance.BulletsPlayer1 = playerBullets;
+		} else {
+			List<GameObject> playerBullets = Manager.Instance.BulletsPlayer2;
+			playerBullets.Add(bullet);
+			Manager.Instance.BulletsPlayer2 = playerBullets;
+		}
 
 		Destroy(bullet, 5.0f);
 	}

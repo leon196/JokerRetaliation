@@ -6,6 +6,13 @@ public class Manager : MonoBehaviour {
 
 	private static Manager _instance;
 
+	public static Vector3 PlayerSpawn = new Vector3(10.0f, 7.2f, 0f);
+
+	public static float ScreenBottom = 0.0f;
+	public static float ScreenRight = 18.0f;
+	public static float ScreenLeft = 1.8f;
+	public static float Ground = 3.8f;
+
 	private Manager() {}
 
 	void Awake () {
@@ -27,6 +34,21 @@ public class Manager : MonoBehaviour {
 			}
 			return _controls;
 		}
+	}
+
+	public GameObject GetPlayer(bool isPlayer1) {
+		GameObject player = null;
+		Controls[] controls = this.Controls;
+		foreach (Controls control in controls) {
+			if (isPlayer1 && control.player1) {
+				player = control.gameObject;
+				break;
+			} else if (!isPlayer1 && !control.player1) {
+				player = control.gameObject;
+				break;
+			}
+		}
+		return player;
 	}
 
 	private Scroll _scroll;
@@ -65,6 +87,24 @@ public class Manager : MonoBehaviour {
 				MiniIA.Blocs = _blocs;
 			}
 		}
+	}
+
+	private RocketLauncher _rocketLauncher;
+	public RocketLauncher RocketLauncher {
+		get {
+			if (_rocketLauncher == null) {
+				_rocketLauncher = GetComponentInChildren<RocketLauncher>();
+			}
+			return _rocketLauncher;
+		}
+	}
+	public List<GameObject> RocketLauncherRockets {
+		get {
+			return RocketLauncher.Rockets;
+		}
+	}
+	public void DestroyRocket (GameObject rocket, int index) {
+		RocketLauncher.DestroyRocket(rocket, index);
 	}
 
 	private MiniIA _miniIA;

@@ -9,11 +9,8 @@ public class Scroll : MonoBehaviour {
 
 	public float scroolSpeed = 3.0f;
 	private float blocSize = 1.28f;
-	private float startX = 9.0f;
-	private float endX = -9.0f;
-	private float groundY = -3.8f;
 
-	private float randomRange = 2.0f;
+	private float randomRange = 1.0f;
 
 	public bool freeze = false;
 
@@ -22,10 +19,11 @@ public class Scroll : MonoBehaviour {
 		blocs = new List<GameObject>();	
 
 		// Ground
+
 		for (int i = 0; i < 14; i++) {
 
 			float randomY = Random.Range(0.0f, randomRange);
-			GameObject bloc = Instantiate(blocPrefab, new Vector3(endX + i * blocSize, groundY + randomY, 0f), Quaternion.identity) as GameObject;
+			GameObject bloc = Instantiate(blocPrefab, new Vector3(Manager.ScreenLeft + i * blocSize, Manager.Ground + randomY, 0f), Quaternion.identity) as GameObject;
 			bloc.name = "Bloc";
 			bloc.transform.parent = transform;
 			blocs.Add(bloc);
@@ -37,11 +35,18 @@ public class Scroll : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (!freeze) {
-			foreach (GameObject blocGround in blocs) {
-				blocGround.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
-				if (blocGround.transform.position.x < endX) {
+			foreach (GameObject bloc in blocs) {
+				bloc.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
+				if (bloc.transform.position.x < Manager.ScreenLeft) {
 					float randomY = Random.Range(0.0f, randomRange);
-					blocGround.transform.position = new Vector3(startX, groundY + randomY, 0f);
+					bloc.transform.position = new Vector3(Manager.ScreenRight, Manager.Ground + randomY, 0f);
+/*
+					if (bloc.GetComponent<GenericAnimation>() == null && Random.Range(0.0f, 1.0f) > 0.75f) {
+						bloc.AddComponent<GenericAnimation>();
+						bloc.GetComponent<GenericAnimation>().turn = false;
+						bloc.GetComponent<GenericAnimation>().translate = true;
+					}
+					*/
 				}
 			}
 		}

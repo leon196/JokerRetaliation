@@ -79,6 +79,10 @@ public class Generation : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 
+	   if (Input.GetKeyDown(KeyCode.Escape)) {
+            Application.LoadLevel(0);
+       }
+
 		if (lastUpdate + delay < Time.time)
 		{
 			lastUpdate = Time.time;
