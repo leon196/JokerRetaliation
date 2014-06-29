@@ -7,7 +7,7 @@ public class GenerationScroll : MonoBehaviour {
 
 	public GameObject blocPrefab;
 	private List<GameObject> _blocs;
-	private float posYTop = -1f;
+	private float posYTop = -0.72f;
 	private float posYBottom = -2f;
 
 	public float scroolSpeed = 3.0f;
