@@ -7,17 +7,17 @@ public class IA : MonoBehaviour {
 
     public struct Node
     {
-        public Vector3 pos;
-        public Vector3 parent;
-        public int cost;
+        public GameObject pos;
+        public GameObject parent;
+        public float cost;
     }
 
     Vector3 _pos;
-    List<Vector3> path = new List<Vector3>();
+    List<GameObject> path = new List<GameObject>();
     int _costHorizon = 10;
     int _costDiag = 15;
     float _widthBloc;
-    float _offset = 0.1f;
+    float _offsetY = 0.3f;
 
 	// Use this for initialization
 	void Start () {
@@ -35,11 +35,23 @@ public class IA : MonoBehaviour {
         PathFind();
         while (path.Count > 0)
         {
-            Vector3 target = path.First();
-            this.transform.position = target;
+            // print("-------------");
+            
+            this.transform.parent = path[0].transform;
+            var from = this.transform.position;
+            // print("FROM " + from + " " + Mathf.Abs(this.transform.localPosition.x - 0.1f));
+            var to = new Vector3(0.0f, this.collider.bounds.size.y - _offsetY, 0.0f);
 
+            /*while (Mathf.Abs(this.transform.localPosition.x - 0.1f) > 0.1f)
+            {
+                this.transform.localPosition = Vector3.Lerp(from, to, 0.1f * Time.deltaTime);
+                from = this.transform.localPosition;
+            }*/
+            // print("AFTER " + this.transform.localPosition);
+            this.transform.localPosition = to;
+            
             path.RemoveAt(0);
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(1f);
         }
     }
 
@@ -50,77 +62,44 @@ public class IA : MonoBehaviour {
         _widthBloc = obstacles.First().collider.bounds.size.x;
         float zBloc = obstacles.First().collider.bounds.size.z;
 
-        float yMin = obstacles.Aggregate((o1, o2) =>
-            Mathf.RoundToInt(o1.transform.position.y) < Mathf.RoundToInt(o2.transform.position.y) ? o1 : o2).transform.position.y;
-        float yMax = obstacles.Aggregate((o1, o2) =>
-            Mathf.RoundToInt(o1.transform.position.y) > Mathf.RoundToInt(o2.transform.position.y) ? o1 : o2).transform.position.y;
-
-        // Obtain starting point
-        float xMin = obstacles.Aggregate((o1, o2) =>
-            Mathf.RoundToInt(o1.transform.position.x) < Mathf.RoundToInt(o2.transform.position.x) ? o1 : o2).transform.position.x;
-        Vector3 startPoint = obstacles.Where(o =>
-            Mathf.RoundToInt(o.transform.position.x) == Mathf.RoundToInt(xMin)).Aggregate((o1, o2) =>
-             Mathf.RoundToInt(o1.transform.position.y) > Mathf.RoundToInt(o2.transform.position.y) ? o1 : o2).transform.position;
-        startPoint = new Vector3(startPoint.x, startPoint.y + _widthBloc, zBloc);
-
-        // Obtain end point
-        float xMax = obstacles.Aggregate((o1, o2) =>
-            Mathf.RoundToInt(o1.transform.position.x) > Mathf.RoundToInt(o2.transform.position.x) ? o1 : o2).transform.position.x;
-        Vector3 endPoint = obstacles.Where(o =>
-            Mathf.RoundToInt(o.transform.position.x) == Mathf.RoundToInt(xMax)).Aggregate((o1, o2) =>
-             Mathf.RoundToInt(o1.transform.position.y) > Mathf.RoundToInt(o2.transform.position.y) ? o1 : o2).transform.position;
-        endPoint = new Vector3(endPoint.x, endPoint.y + _widthBloc, zBloc);
-
         List<Vector3> allNodes = new List<Vector3>();
 
-        /*for (float x = (xMin - _offset); x <= xMax + 0.5; x += _offset)
-        {
-            for (float y = yMin; y <= yMax + _offset + 0.5; y += _offset)
-            {
-                allNodes.Add(new Vector3(x, y, zBloc));
-            }
-        }*/
-
-        foreach (var o in obstacles)
-        {
-            allNodes.Add(new Vector3(o.transform.position.x, o.transform.position.y, o.transform.position.z));
-            allNodes.Add(new Vector3(o.transform.position.x, o.transform.position.y + _widthBloc, o.transform.position.z));
-        }
-
-        Node startingNode = new Node();
-        startingNode.pos = allNodes.Where(n =>
-            n.x >= startPoint.x && n.x <= startPoint.x + _offset
-            &&
-            n.y >= startPoint.y && n.y <= startPoint.y + _offset).First();
-        startingNode.cost = 0;
-
-        var l = obstacles.Select(o => o.transform.position).ToList();
-
-        /********************************************/
-
+        // Init all
+        float semiBlocs = _widthBloc / 2;
+        var walkableBlocs = obstacles.Where(o => !obstacles.Where(o2 =>
+            o2.transform.position != o.transform.position).Any(o2 =>
+                (o2.transform.position.x >= o.transform.position.x - semiBlocs && o2.transform.position.x <= o.transform.position.x + semiBlocs) &&
+                o2.transform.position.y >= o.transform.position.y + semiBlocs && o2.transform.position.y <= o.transform.position.y + _widthBloc + semiBlocs)).ToList();
+        var obstacleBlocs = obstacles.Except(walkableBlocs).ToList();
+        var firstBloc = walkableBlocs.Where(o => o.transform.tag.Equals("StartBloc")).First();
+        var lastBloc = walkableBlocs.Where(o => o.transform.tag.Equals("EndBloc")).First();
+        
+        // startingNode = new Node() { pos = firstBloc, cost = 0 };
+        Node startingNode = new Node() { cost = 0, parent = null, pos = firstBloc };
         Dictionary<Node, float> openList = new Dictionary<Node, float>();
         openList.Add(startingNode, 0);
         List<Node> closedList = new List<Node>();
         bool foundTheEnd = false;
 
-        foreach (var n in allNodes)
-            print(n);
-
-        while(!foundTheEnd && openList.Count > 0)
+        while (!foundTheEnd && openList.Count > 0)
         {
+            // On se place la où le coût est le plus faible
             var currentNode = openList.Aggregate((n1, n2) =>
                 n1.Value < n2.Value ? n1 : n2);
 
             openList.Remove(currentNode.Key);
             closedList.Add(currentNode.Key);
 
-            List<Node> neighbors = FindPossibleNodes(currentNode.Key, l, allNodes, closedList);
+            var t = obstacles.Where(o => o.transform.position != currentNode.Key.pos.transform.position).ToList();
+            /*foreach (var o in t)
+                print(o.transform.position);*/
+            List<Node> neighbors = FindPossibleNodes3(currentNode.Key, t, walkableBlocs, closedList);
 
             foreach (var n in neighbors)
             {
                 if (!openList.Any(nv => nv.Key.pos == n.pos))
                 {
-                    float val = n.cost + calculEstimateMovement(n.pos, endPoint);
+                    float val = n.cost + calculEstimateMovement(n.pos.transform.position, lastBloc.transform.position);
                     openList.Add(n, val);
                 }
                 else
@@ -129,20 +108,20 @@ public class IA : MonoBehaviour {
                     if (n.cost > nv.Key.cost)
                     {
                         openList.Remove(nv.Key);
-                        float val = n.cost + calculEstimateMovement(n.pos, endPoint);
+                        float val = n.cost + calculEstimateMovement(n.pos.transform.position, lastBloc.transform.position);
                         openList.Add(n, val);
                     }
                 }
             }
 
-            foundTheEnd = (Mathf.Abs(currentNode.Key.pos.x - endPoint.x) < 0.1
-                &&
-                Mathf.Abs(currentNode.Key.pos.y - endPoint.y) < 0.1) ? true : false;
+            foundTheEnd = currentNode.Key.pos == lastBloc ? true : false;
         }
 
+        print("Closed " + closedList.Count);
         Node node = closedList.Last();
-        List<Vector3> pos = new List<Vector3>();
-        
+        List<GameObject> pos = new List<GameObject>();
+        pos.Add(node.pos);
+
         while (node.cost != 0)
         {
             pos.Add(node.parent);
@@ -152,6 +131,120 @@ public class IA : MonoBehaviour {
         path = pos;
     }
 
+    List<Node> FindPossibleNodes3(Node current, List<GameObject> obstacles, List<GameObject> walkableArea, List<Node> closed)
+    {
+        List<Node> returnList = new List<Node>();
+        Node addNode;
+
+        // Check le premier à droite
+        float semiBloc = _widthBloc / 2;
+        var walkableRight = walkableArea.Where(o =>
+            o.transform.position.x >= current.pos.transform.position.x + semiBloc &&
+            o.transform.position.x <= current.pos.transform.position.x + _widthBloc + semiBloc).ToList();
+        var obstacleRight = obstacles.Where(o =>
+            o.transform.position.x >= current.pos.transform.position.x + semiBloc &&
+            o.transform.position.x <= current.pos.transform.position.x + _widthBloc + semiBloc).ToList();
+
+        if (walkableRight.Count > 0)
+        {
+            foreach (var b in walkableRight)
+            {
+                // Si plus de deux blocs au dessus
+                if (b.transform.position.y >= current.pos.transform.position.y + (_widthBloc * 2) + semiBloc)
+                    continue;
+
+                bool haveFound = false;
+
+                // Si le bloc est en bas, on regarde si on peut sauter sur un autre bloc
+                if (b.transform.position.y <= current.pos.transform.position.y - semiBloc)
+                {
+                    var furtherRight = walkableArea.Where(o =>
+                        o.transform.position.x >= b.transform.position.x + semiBloc &&
+                        o.transform.position.x <= b.transform.position.x + _widthBloc + semiBloc).ToList();
+
+                    bool haveObstacleB = obstacles.Any(o =>
+                                (o.transform.position.x >= (current.pos.transform.position.x - semiBloc) &&
+                                o.transform.position.x <= (current.pos.transform.position.x + semiBloc))
+                                &&
+                                (o.transform.position.y >= (current.pos.transform.position.y + semiBloc) &&
+                                o.transform.position.y <= (current.pos.transform.position.y + _widthBloc*3 + semiBloc)));
+                    foreach (var br in furtherRight)
+                    {
+                        var furtherRightRight = walkableArea.Where(o =>
+                        o.transform.position.x >= br.transform.position.x + semiBloc &&
+                        o.transform.position.x <= br.transform.position.x + _widthBloc + semiBloc).ToList();
+                        
+                        bool haveObstacleBR = obstacles.Any(o =>
+                            (o.transform.position.x >= (b.transform.position.x - semiBloc) &&
+                            o.transform.position.x <= (b.transform.position.x + semiBloc))
+                            &&
+                            (o.transform.position.y >= (current.pos.transform.position.y + semiBloc) &&
+                            o.transform.position.y <= (current.pos.transform.position.y + _widthBloc * 3 + semiBloc)));
+
+                        print("Nyeh " + (br.transform.position));
+
+                        foreach (var brr in furtherRightRight)
+                        {
+                            // Si au dessus
+                            if (brr.transform.position.y >= current.pos.transform.position.y + semiBloc)
+                                continue;
+
+                            print("h " + haveObstacleBR);
+                            bool haveObstacleBRR = obstacles.Any(o =>
+                                (o.transform.position.x >= br.transform.position.x - semiBloc &&
+                                o.transform.position.x <= br.transform.position.x + semiBloc)
+                                &&
+                                (o.transform.position.y >= current.pos.transform.position.y + semiBloc &&
+                                o.transform.position.y <= current.pos.transform.position.y + _widthBloc * 3 + semiBloc));
+
+                            if (haveObstacleB || haveObstacleBR || haveObstacleBRR)
+                            {
+                                print("OBSTACLE");
+                                continue;
+                            }
+
+                            addNode = new Node();
+                            addNode.cost = calculEstimateMovement(current.pos.transform.position, brr.transform.position);
+                            addNode.parent = current.pos;
+                            addNode.pos = brr;
+                            returnList.Add(addNode);
+                            haveFound = true;
+                        }
+
+                        if(!haveFound)
+                        {
+                            // Si plus d'un bloc au dessus
+                            if (br.transform.position.y >= current.pos.transform.position.y + _widthBloc + semiBloc)
+                                continue;
+
+                            if(haveObstacleB || haveObstacleBR)
+                                continue;
+                        
+                            addNode = new Node();
+                            addNode.cost = calculEstimateMovement(current.pos.transform.position, br.transform.position);
+                            addNode.parent = current.pos;
+                            addNode.pos = br;
+                            returnList.Add(addNode);
+                        }
+                        
+                    }
+                }
+                
+                if(!haveFound)
+                {
+
+                    addNode = new Node();
+                    addNode.cost = calculEstimateMovement(current.pos.transform.position, b.transform.position);
+                    addNode.parent = current.pos;
+                    addNode.pos = b;
+                    returnList.Add(addNode);
+                }
+            }
+        }
+
+        return returnList;
+    }
+    /*
     List<Node> FindPossibleNodes(Node current, List<Vector3> obstacles, List<Vector3> allNodes, List<Node> closed)
     {
         bool obstacleRight = obstacles.Any(o =>
@@ -244,7 +337,7 @@ public class IA : MonoBehaviour {
         }
 
         return returnList.Where(n => !(closed.Any(n2 => n.pos == n2.pos))).ToList();
-    }
+    }*/
 
     float calculEstimateMovement(Vector3 current, Vector3 target)
     {
