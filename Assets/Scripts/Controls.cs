@@ -130,7 +130,7 @@ public class Controls : MonoBehaviour
 			CheckCollisionBatman();
 
 			// Game Over
-			if (transform.position.x < Manager.ScreenLeft) {
+			if (transform.position.x < Manager.ScreenLeft || transform.position.y < Manager.ScreenBottom) {
 				GameOver(false);
 			}
 
