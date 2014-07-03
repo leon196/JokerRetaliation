@@ -8,10 +8,10 @@ public class Manager : MonoBehaviour {
 
 	public static Vector3 PlayerSpawn = new Vector3(0.0f, 0.0f, 0.0f);
 
-	public static float ScreenTop = 4.0f;
+	public static float ScreenTop = 7.0f;
 	public static float ScreenBottom = -7.0f;
-	public static float ScreenRight = 7.0f;
-	public static float ScreenLeft = -7.7f;
+    public static float ScreenRight { get { return Camera.main.transform.position.x + Camera.main.orthographicSize; } }
+    public static float ScreenLeft { get { return Camera.main.transform.position.x - Camera.main.orthographicSize; } }
 	public static float Ground = -3.0f;
 
 	private Manager() {}
@@ -65,11 +65,12 @@ public class Manager : MonoBehaviour {
 		return player;
 	}
 
-	private Scroll _scroll;
-	public Scroll Scroll {
+	private GenerationScroll _scroll;
+    public GenerationScroll Scroll
+    {
 		get {
 			if (_scroll == null) {
-				_scroll = GetComponentInChildren<Scroll>();
+                _scroll = GetComponentInChildren<GenerationScroll>();
 			}
 			return _scroll;
 		}
@@ -102,6 +103,27 @@ public class Manager : MonoBehaviour {
 			}
 		}
 	}
+
+    private List<GameObject> _bombs;
+    public List<GameObject> Bombs
+    {
+        get
+        {
+            if (_bombs == null)
+            {
+                _bombs = new List<GameObject>();
+                SpriteRenderer[] sprites = GetComponentsInChildren<SpriteRenderer>();
+                foreach (SpriteRenderer sprite in sprites)
+                {
+                    if (sprite.name == "Bomb")
+                    {
+                        _bombs.Add(sprite.gameObject);
+                    }
+                }
+            }
+            return _bombs;
+        }
+    }
 
 	private RocketLauncher _rocketLauncher;
 	public RocketLauncher RocketLauncher {
@@ -138,9 +160,9 @@ public class Manager : MonoBehaviour {
 				controls.freeze = true;
 			}
 		}
-		if (Scroll != null) {
+		/*if (Scroll != null) {
 			Scroll.freeze = true;
-		}
+		}*/
 	}
 
 	public void Resume ()
@@ -150,9 +172,9 @@ public class Manager : MonoBehaviour {
 				controls.freeze = false;
 			}
 		}
-		if (Scroll != null) {
+		/*if (Scroll != null) {
 			Scroll.freeze = false;
-		}
+		}*/
 	}
 
 	private SpriteRenderer _screenFail;
@@ -204,4 +226,17 @@ public class Manager : MonoBehaviour {
 			GetOpponent(false).GetComponent<Controls>().OppenentBullets = _bulletsPlayer2;
 		}
 	}
+
+    private bool _gameOver = false;
+    public bool IsGameOver
+    {
+        get
+        {
+            return _gameOver;
+        }
+        set
+        {
+            _gameOver = value;
+        }
+    }
 }

@@ -42,6 +42,7 @@ public class Controls : MonoBehaviour
 	private bool collisionLeft = false;
 	private bool collisionRight = false;
 	private bool collisionUp = false;
+    private bool _isTakingDamage = false;
 	private bool ducking = false;
 	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
 	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
@@ -49,7 +50,7 @@ public class Controls : MonoBehaviour
 	// Velocity
 	private Vector3 velocity;
 	private float speed = 4.5f;
-	private float speedAutoScroll = 0.40f;
+    private float speedAutoScroll = 5.75f;// 0.40f;
 	private float jump = 40.5f;
 	private float dragAir = 0.95f;
 	private float dragGround = 0.75f;
@@ -130,7 +131,9 @@ public class Controls : MonoBehaviour
 			CheckCollisionBatman();
 
 			// Game Over
-			if (transform.position.x < Manager.ScreenLeft) {
+            if (transform.position.x < Manager.ScreenLeft - 2.5)
+            {
+                print(Manager.ScreenLeft);
 				GameOver(false);
 			}
 
@@ -141,6 +144,9 @@ public class Controls : MonoBehaviour
 
 			// Collision
 			CheckCollisionBlocs();
+
+            // Bombs
+            CheckCollisionsBombs();
 
 			// Movement
 			UpdateMovement();
@@ -187,8 +193,8 @@ public class Controls : MonoBehaviour
 
 	void GameOver (bool batmanGotCaught)
 	{
-	
 		freeze = true;
+        Manager.Instance.IsGameOver = true;
 
 		if (batmanGotCaught)
 		{
@@ -204,6 +210,8 @@ public class Controls : MonoBehaviour
 	{
 		// Init
 		SpriteRenderer screen = Manager.Instance.GetScreenGameOver(batmanGotCaught);
+        screen.transform.parent = Camera.main.transform;
+        screen.transform.localPosition = new Vector3(0.0f, 0.0f, 1f);
 
 		float x = 0.0f;
 		Color screenColor = screen.color;
@@ -255,6 +263,21 @@ public class Controls : MonoBehaviour
 			GameOver(true);
 		}
 	}
+
+    void CheckCollisionsBombs()
+    {
+        if (_isTakingDamage)
+            return;
+
+        foreach (var bomb in Manager.Instance.Bombs)
+        {
+            Bounds bounds = bomb.collider.bounds;
+            if (playerCollider.bounds.Intersects(bounds))
+            {
+                this.Push(Vector3.left);
+            }
+        }
+    }
 
 	void CheckCollisionBlocs ()
 	{
@@ -501,7 +524,7 @@ public class Controls : MonoBehaviour
 		collisionRight = false;
 		collisionLeft = false;
 		transform.position += new Vector3(0f, VELOCITY_COLLISION_OFFSET, 0f);
-		velocity = direction;
+        velocity = new Vector3(-10.0f, 0.0f, 0.0f); ;
 
 		dead = true;
 		deadLast = Time.time;

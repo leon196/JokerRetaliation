@@ -18,47 +18,84 @@ public class IA : MonoBehaviour {
     int _costDiag = 15;
     float _widthBloc;
     float _offsetY = 0.3f;
+    string str = string.Empty;
+    Dictionary<string, List<GameObject>> _paths = new Dictionary<string, List<GameObject>>();
 
 	// Use this for initialization
 	void Start () {
+        Manager.Instance.Scroll.PrepareIA();
+        str = Manager.Instance.Scroll.GetNextLv().name;
+
         StartCoroutine("Movement");
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
+
+        if (this.transform.parent == null ||this.transform.parent.parent == null ||
+            this.transform.parent.parent.name.Length < 5 || Manager.Instance.IsGameOver)
+            return;
+
+        string t = this.transform.parent.parent.name.Substring(0, 5);
+        if (t.Equals("Level"))
+        {
+            if (!this.transform.parent.parent.name.Equals(str))
+            {
+                str = this.transform.parent.parent.name;
+                print(str);
+            }
+        }
 	}
 
     IEnumerator Movement()
     {
-        _pos = this.transform.position;
-        PathFind();
-        while (path.Count > 0)
-        {
-            // print("-------------");
-            
-            this.transform.parent = path[0].transform;
-            var from = this.transform.position;
-            // print("FROM " + from + " " + Mathf.Abs(this.transform.localPosition.x - 0.1f));
-            var to = new Vector3(0.0f, this.collider.bounds.size.y - _offsetY, 0.0f);
 
-            /*while (Mathf.Abs(this.transform.localPosition.x - 0.1f) > 0.1f)
+        foreach (var n in _paths)
+        {
+            print(n.Key);
+        }
+
+        this.transform.parent = _paths[str][0].transform;
+        this.transform.localPosition = new Vector3(0.0f, this.collider.bounds.size.y - _offsetY, 0.0f);
+        
+        while (!Manager.Instance.IsGameOver)
+        {
+            path = new List<GameObject>(_paths[str]);
+            // PathFind();
+            while (path.Count > 0)
             {
-                this.transform.localPosition = Vector3.Lerp(from, to, 0.1f * Time.deltaTime);
-                from = this.transform.localPosition;
-            }*/
-            // print("AFTER " + this.transform.localPosition);
-            this.transform.localPosition = to;
-            
-            path.RemoveAt(0);
-            yield return new WaitForSeconds(1f);
+                this.transform.parent = path[0].transform;
+                var from = this.transform.localPosition;
+                var to = new Vector3(0.0f, this.collider.bounds.size.y - _offsetY, 0.0f);
+                /*this.transform.localPosition = to;
+                yield return new WaitForSeconds(0.75f);*/
+                float step = 0.0f; //non-smoothed
+                float rate = 9f; /// 2.0f; //amount to increase non-smooth step by
+                float smoothStep = 0.0f; //smooth step this time
+                float lastStep = 0.0f; //smooth step last time
+                while (step < 1.0)
+                {
+                    step += Time.deltaTime * rate; //increase the step
+                    smoothStep = Mathf.SmoothStep(0.0f, 1.0f, step); //get the smooth step
+                    this.transform.localPosition = Vector3.Slerp(from, to, smoothStep);
+                    lastStep = smoothStep; //store the smooth step
+                    yield return new WaitForSeconds(0.05f);
+                }
+
+                //finish any left-over
+                if (step > 1.0)
+                {
+                    this.transform.localPosition = to;
+                }
+
+                path.RemoveAt(0);
+            }
+            str = Manager.Instance.Scroll.GetNextLv().name;
         }
     }
 
-    void PathFind()
+    public void PathFind(List<GameObject> obstacles, string nameLv)
     {
-        var obstacles = Manager.Instance.Blocs;
-
         _widthBloc = obstacles.First().collider.bounds.size.x;
         float zBloc = obstacles.First().collider.bounds.size.z;
 
@@ -117,7 +154,7 @@ public class IA : MonoBehaviour {
             foundTheEnd = currentNode.Key.pos == lastBloc ? true : false;
         }
 
-        print("Closed " + closedList.Count);
+        // print("Closed " + closedList.Count);
         Node node = closedList.Last();
         List<GameObject> pos = new List<GameObject>();
         pos.Add(node.pos);
@@ -129,6 +166,8 @@ public class IA : MonoBehaviour {
         }
         pos.Reverse();
         path = pos;
+        _paths.Add(nameLv, pos);
+        print(_paths.Count);
     }
 
     List<Node> FindPossibleNodes3(Node current, List<GameObject> obstacles, List<GameObject> walkableArea, List<Node> closed)
@@ -181,15 +220,12 @@ public class IA : MonoBehaviour {
                             (o.transform.position.y >= (current.pos.transform.position.y + semiBloc) &&
                             o.transform.position.y <= (current.pos.transform.position.y + _widthBloc * 3 + semiBloc)));
 
-                        print("Nyeh " + (br.transform.position));
-
                         foreach (var brr in furtherRightRight)
                         {
                             // Si au dessus
                             if (brr.transform.position.y >= current.pos.transform.position.y + semiBloc)
                                 continue;
 
-                            print("h " + haveObstacleBR);
                             bool haveObstacleBRR = obstacles.Any(o =>
                                 (o.transform.position.x >= br.transform.position.x - semiBloc &&
                                 o.transform.position.x <= br.transform.position.x + semiBloc)

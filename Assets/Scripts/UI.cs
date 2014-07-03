@@ -27,7 +27,6 @@ public class UI : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
 	{
-
 	}
 	
 	// Update is called once per frame
@@ -57,7 +56,7 @@ public class UI : MonoBehaviour {
 		if (!is_pause) 
 		{
 			timer_text = String.Format ("{0:00}:{1:00}:{2:00}", minutes, seconds, fraction); 
-			GUI.Label (new Rect (Screen.width / 2 - 50, 25, 100, 30), timer_text, timer_style);
+			GUI.Label (new Rect (0, 25, 100, 30), timer_text, timer_style);
 		}
 
 		if (is_pause) 

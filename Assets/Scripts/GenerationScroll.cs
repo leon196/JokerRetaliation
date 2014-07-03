@@ -6,11 +6,17 @@ using System.Linq;
 public class GenerationScroll : MonoBehaviour {
 	
     public int numberLv = 5;
+    public float speedScroll = 0.05f;
     private GameObject[] _levels;
     private float _widthLevel = 21.76f;
     private int nbLevelInstantiate = 0;
     private GameObject _currentLv = null;
     private GameObject _nextLv = null;
+
+    public GameObject GetNextLv()
+    {
+        return _nextLv;
+    }
 
     private void Instanciate()
     {
@@ -22,7 +28,7 @@ public class GenerationScroll : MonoBehaviour {
 
         _currentLv = go;
         _levels[0] = go;
-
+        
         for (int i = 1; i < numberLv; i++)
         {
             lvToLoad = string.Format("Prefabs/Levels/Level_{0}", i);
@@ -43,7 +49,28 @@ public class GenerationScroll : MonoBehaviour {
     {
         _levels = new GameObject[numberLv];
 		Instanciate();
+        
 	}
+
+    void Start()
+    {
+        
+    }
+
+    public void PrepareIA()
+    {
+        foreach (var lv in _levels)
+        {
+            List<GameObject> pathList = new List<GameObject>();
+            foreach (Transform t in lv.transform)
+            {
+                if (t.name == "Bloc")
+                    pathList.Add(t.gameObject);
+            }
+
+            Manager.Instance.Batman.GetComponent<IA>().PathFind(pathList, lv.name);
+        }
+    }
 
 	// Update is called once per frame
 	void Update () {
@@ -52,15 +79,16 @@ public class GenerationScroll : MonoBehaviour {
 			Application.LoadLevel(0);
 		}
 
+        if (Manager.Instance.IsGameOver)
+            return;
+
         Camera.main.transform.position = new Vector3(Camera.main.transform.position.x + 0.075f,
             Camera.main.transform.position.y, Camera.main.transform.position.z);
 
-        if (_currentLv.transform.position.x + _widthLevel < Camera.main.transform.position.x)
+        if (_currentLv.transform.position.x + _widthLevel + 2 < Camera.main.transform.position.x)
         {
             _currentLv = _nextLv;
-            print(_currentLv.name);
             int current = int.Parse(_currentLv.name.Substring(_currentLv.name.Length-1, 1));
-            print("current");
             int r = Random.Range(0,5);
             while(r == current)
                 r = Random.Range(0,5);

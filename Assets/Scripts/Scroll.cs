@@ -16,39 +16,11 @@ public class Scroll : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		blocs = new List<GameObject>();	
-
-		// Ground
-
-		for (int i = 0; i < 14; i++) {
-
-			float randomY = Random.Range(0.0f, randomRange);
-			GameObject bloc = Instantiate(blocPrefab, new Vector3(Manager.ScreenLeft + i * blocSize, Manager.Ground + randomY, 0f), Quaternion.identity) as GameObject;
-			bloc.name = "Bloc";
-			bloc.transform.parent = transform;
-			blocs.Add(bloc);
-		}
-
-		Manager.Instance.Blocs = blocs;
+        print(this.name);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (!freeze) {
-			foreach (GameObject bloc in blocs) {
-				bloc.transform.Translate(Vector3.right * Time.deltaTime * -scroolSpeed);
-				if (bloc.transform.position.x < Manager.ScreenLeft) {
-					float randomY = Random.Range(0.0f, randomRange);
-					bloc.transform.position = new Vector3(Manager.ScreenRight, Manager.Ground + randomY, 0f);
-/*
-					if (bloc.GetComponent<GenericAnimation>() == null && Random.Range(0.0f, 1.0f) > 0.75f) {
-						bloc.AddComponent<GenericAnimation>();
-						bloc.GetComponent<GenericAnimation>().turn = false;
-						bloc.GetComponent<GenericAnimation>().translate = true;
-					}
-					*/
-				}
-			}
-		}
+
 	}
 }
