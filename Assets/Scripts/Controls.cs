@@ -174,7 +174,7 @@ public class Controls : MonoBehaviour
 
 	void RespawnPlayer ()
 	{
-		transform.position = Manager.PlayerSpawn;
+		transform.localPosition = Manager.PlayerSpawn;
 		velocity = new Vector3();
 		collisionDown = false;
 		collisionUp = false;
@@ -185,7 +185,6 @@ public class Controls : MonoBehaviour
 
 	void GameOver (bool batmanGotCaught)
 	{
-		SpriteRenderer screen = Manager.Instance.GetScreenGameOver(batmanGotCaught);
 	
 		// Anim
 		StartAnimationAttack();
@@ -194,6 +193,38 @@ public class Controls : MonoBehaviour
 		batman.Push();
 		
 		Explosion(new Vector3(transform.position.x, collider.bounds.min.y, 0f));
+
+		StartCoroutine(Cinematic(batmanGotCaught));
+	}
+
+	IEnumerator Cinematic (bool batmanGotCaught)
+	{
+		// Init
+		SpriteRenderer screen = Manager.Instance.GetScreenGameOver(batmanGotCaught);
+		float x = 0.0f;
+		Color screenColor = screen.color;
+		screenColor.a = 0.0f;
+		screenColor = screenColor;
+		screen.enabled = true;
+
+		// Processing
+		float delay = 10.0f;
+		while (x < delay) {
+
+			Explosion(new Vector3(Random.Range(Manager.ScreenLeft, Manager.ScreenRight), Random.Range(Manager.ScreenBottom, Manager.ScreenTop), 0f));
+			
+			screenColor.a = x / delay;
+			screen.color = screenColor;
+
+			x += Time.deltaTime;
+			yield return null;
+		}
+
+		// Wait for it ...
+		yield return new WaitForSeconds(1.5f);
+
+		// Go for Menu
+		Application.LoadLevel(0);
 	}
 
 	void CheckCollisionBatman ()

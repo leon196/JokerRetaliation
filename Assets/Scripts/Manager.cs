@@ -6,8 +6,9 @@ public class Manager : MonoBehaviour {
 
 	private static Manager _instance;
 
-	public static Vector3 PlayerSpawn = new Vector3(0.0f, 0.0f, 0f);
+	public static Vector3 PlayerSpawn = new Vector3(0.0f, 0.0f, 0.0f);
 
+	public static float ScreenTop = 4.0f;
 	public static float ScreenBottom = -7.0f;
 	public static float ScreenRight = 7.0f;
 	public static float ScreenLeft = -7.0f;
