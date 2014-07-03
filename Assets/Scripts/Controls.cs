@@ -12,6 +12,7 @@ public class Controls : MonoBehaviour
 	public GameObject explosionPrefab;
 
 	public bool player1 = true;
+	public bool horizontal = false;
 	public bool snap = false;
 	public bool attack = false;
 
@@ -25,19 +26,30 @@ public class Controls : MonoBehaviour
 
 	private GameObject opponent;
 	private List<GameObject> opponentBullets;
-	public List<GameObject> OppenentBullets {
-		set { opponentBullets = value; }
-	}
+	public List<GameObject> OppenentBullets { set { opponentBullets = value; } }
 
+	// Victory condition
+	private float timeStarted = 0.0f;
+	private float timeLeft = 30.0f;
+	private Vector3 playerStartPosition;
+	private Vector3 playerEndPosition;
+
+	// BATMAN !
+	private Batman batman;
+
+	// Collisions
 	private bool collisionDown = false;
 	private bool collisionLeft = false;
 	private bool collisionRight = false;
 	private bool collisionUp = false;
 	private bool ducking = false;
-	private Vector3 input;
+	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
+	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
 
+	// Velocity
 	private Vector3 velocity;
 	private float speed = 4.5f;
+	private float speedAutoScroll = 0.40f;
 	private float jump = 40.5f;
 	private float dragAir = 0.95f;
 	private float dragGround = 0.75f;
@@ -48,19 +60,20 @@ public class Controls : MonoBehaviour
 	private const float VELOCITY_COLLISION_OFFSET = 0.5f; // like a bias : distance of the overlap between player bounds and bloc bounds
 	private const float VELOCITY_COLLISION_ATTENUATION = 0.33f; // the ratio of returning force when collision
 
-	private Rect rectStand = new Rect(0f, 0f, 1.28f, 2.04f);
-	private Rect rectDuck = new Rect(0f, -0.3839f, 1.28f, 1.272f);
-
+	// Attack
 	private bool attacking = false;
 	private float attackDelay = 0.5f;
 	private float attackLast = 0.0f;
 	private float attackForce = 10.0f;
 	private float bulletForce = 10.0f;
 
+	// Hitted
 	private float deadDelay = 0.5f;
 	private float deadLast = 0.0f;
 	private bool dead = false;
 
+	// Inputs
+	private Vector3 input;
 	private string inputHorizontalName = "Horizontal";
 	private string inputVerticalName = "Vertical";
 	private KeyCode inputAttack = KeyCode.F;
@@ -93,33 +106,55 @@ public class Controls : MonoBehaviour
 		if (!spriteStand || !spriteDuck || !spriteAttack || !spriteDead) {
 			Debug.Log("*Woops* public links broken");
 		}
+
+		playerStartPosition = transform.position;
+		playerEndPosition = transform.position;
+		playerEndPosition.x = Manager.ScreenRight;
+
+		batman = Manager.Instance.Batman;
 	}
 	
 	// Update is called once per frame
 	void Update ()
 	{
 		
-	   if (Input.GetKeyDown(KeyCode.Escape)) {
-            Application.LoadLevel(0);
-       }
+		// Escape Menu
+		if (Input.GetKeyDown(KeyCode.Escape)) {
+			Application.LoadLevel(0);
+		}
 		
+		// Main Loop
 		if (!freeze)
 		{
-			CheckCollisions();
+			// Victory
+			CheckCollisionBatman();
 
-			UpdateMovement();
-
-			if (attack && !dead) Attack();
-
-			if (transform.position.y < Manager.ScreenBottom) {
-				RespawnPlayer();
+			// Game Over
+			if (transform.position.x < Manager.ScreenLeft) {
+				GameOver(false);
 			}
 
+			// Quick Debug Game over
+			//if (transform.position.y < Manager.ScreenBottom) {
+				//RespawnPlayer();
+			//}
+
+			// Collision
+			CheckCollisionBlocs();
+
+			// Movement
+			UpdateMovement();
+
+			// Attack
+			if (attack && !dead) Attack();
+
+			// Restore player
 			if (dead && deadLast + deadDelay < Time.time) {
 				dead = false;
 				playerSprite.sprite = spriteStand;
 			}
 
+			// Get hitted by bullets
 			if (opponentBullets != null) {
 				for (int i = 0; i < opponentBullets.Count; i++) {
 					GameObject bullet = opponentBullets[i];
@@ -141,15 +176,87 @@ public class Controls : MonoBehaviour
 
 	void RespawnPlayer ()
 	{
-		transform.position = Manager.PlayerSpawn;
+		transform.localPosition = Manager.PlayerSpawn;
 		velocity = new Vector3();
 		collisionDown = false;
 		collisionUp = false;
 		collisionRight = false;
 		collisionLeft = false;
+		freeze = false;
 	}
 
-	void CheckCollisions ()
+	void GameOver (bool batmanGotCaught)
+	{
+	
+		freeze = true;
+
+		if (batmanGotCaught)
+		{
+			StartAnimationAttack();
+			batman.Push();	
+			Explosion(new Vector3(transform.position.x, collider.bounds.min.y, 0f));
+		}
+
+		StartCoroutine(Cinematic(batmanGotCaught));
+	}
+
+	IEnumerator Cinematic (bool batmanGotCaught)
+	{
+		// Init
+		SpriteRenderer screen = Manager.Instance.GetScreenGameOver(batmanGotCaught);
+
+		float x = 0.0f;
+		Color screenColor = screen.color;
+		screenColor.a = 0.0f;
+		screenColor = screenColor;
+		screen.enabled = true;
+
+		// Processing
+		float delay = batmanGotCaught ? 10.0f : 1.0f;
+
+		if (batmanGotCaught) {
+			while (x < delay)
+			{
+				// Boum !
+				Explosion(new Vector3(Random.Range(Manager.ScreenLeft, Manager.ScreenRight), Random.Range(Manager.ScreenBottom, Manager.ScreenTop), 0f));
+				
+				// Fade in
+				screenColor.a = x / delay;
+				screen.color = screenColor;
+
+				// Motor
+				x += Time.deltaTime;
+				yield return null;
+			}
+		} else {
+			while (x < delay)
+			{
+				// Fade in
+				screenColor.a = x / delay;
+				screen.color = screenColor;
+
+				// Motor
+				x += Time.deltaTime;
+				yield return null;
+			}
+		}
+
+		// Wait for it ...
+		yield return new WaitForSeconds(1.5f);
+
+		// Go for Menu
+		Application.LoadLevel(0);
+	}
+
+	void CheckCollisionBatman ()
+	{
+		Bounds bounds = batman.collider.bounds;
+		if (playerCollider.bounds.Intersects(bounds)) {
+			GameOver(true);
+		}
+	}
+
+	void CheckCollisionBlocs ()
 	{
 		collisionDown = false;
 		collisionUp = false;
@@ -216,8 +323,27 @@ public class Controls : MonoBehaviour
 		}
 
 		// Velocity Horizontal
-		velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
-		
+		if (horizontal) {
+			// Add velocity with clamp and collision
+			velocity.x = Mathf.Max(collisionLeft ? 0.0f : -VELOCITY_MAX, Mathf.Min(velocity.x + input.x, collisionRight ? 0.0f : VELOCITY_MAX));
+			// Change Orientation
+			if (velocity.x < 0 && transform.localScale.x > 0) {
+				transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+			} else if (velocity.x > 0 && transform.localScale.x < 0) {
+				transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			} 
+		}
+		// Auto Scroll Horizontal
+		else {
+			/* Animation incompatible with collisions ?
+			float ratioPosition = (Time.time - timeStarted) / timeLeft;
+			Vector3 position = transform.position;
+			position.x = Mathf.Lerp(playerStartPosition.x, playerEndPosition.x, ratioPosition);
+			transform.position = position;
+			*/
+			// Add velocity with clamp and collision
+			velocity.x = Mathf.Min(Time.deltaTime * speedAutoScroll, collisionRight ? 0.0f : Mathf.Infinity);
+		}
 
 		// In Air
 		if (!collisionDown)
@@ -263,18 +389,19 @@ public class Controls : MonoBehaviour
 
 		// Apply Transformations
 		transform.position += velocity;
-
-		// Change Orientation of Batman
-		if (velocity.x < 0 && transform.localScale.x > 0) {
-			transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
-		} else if (velocity.x > 0 && transform.localScale.x < 0) {
-			transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-		} 
 	}
 
 	void StopAttack() {
 		attacking = false;
 		attackLast = Time.time-attackDelay + 0.1f;
+	}
+
+	void StartAnimationAttack ()
+	{
+		playerSprite.sprite = spriteAttack;
+		attackSprite.enabled = true;
+		attackLast = Time.time;
+		attacking = true;
 	}
 
 	void Attack ()
@@ -287,10 +414,7 @@ public class Controls : MonoBehaviour
 
 		// Attack
 		if (Input.GetKeyDown(inputAttack) && !ducking) {
-			playerSprite.sprite = spriteAttack;
-			attackSprite.enabled = true;
-			attackLast = Time.time;
-			attacking = true;
+			StartAnimationAttack();
 		}
 
 		// Stop Attacking
@@ -317,12 +441,14 @@ public class Controls : MonoBehaviour
 			} 
 
 			// Helicopter
+			/*
 			RocketLauncher helicopter = Manager.Instance.RocketLauncher;
 			if (helicopter.collider.bounds.Intersects(playerCollider.bounds)) {
 				Explosion((helicopter.transform.position + transform.position) / 2.0f);
 				StopAttack();
 				return;
 			}
+			*/
 
 			// Rockets
 			List<GameObject> rockets = Manager.Instance.RocketLauncherRockets;

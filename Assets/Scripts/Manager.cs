@@ -6,12 +6,13 @@ public class Manager : MonoBehaviour {
 
 	private static Manager _instance;
 
-	public static Vector3 PlayerSpawn = new Vector3(10.0f, 7.2f, 0f);
+	public static Vector3 PlayerSpawn = new Vector3(0.0f, 0.0f, 0.0f);
 
-	public static float ScreenBottom = 0.0f;
-	public static float ScreenRight = 18.0f;
-	public static float ScreenLeft = 1.8f;
-	public static float Ground = 3.8f;
+	public static float ScreenTop = 4.0f;
+	public static float ScreenBottom = -7.0f;
+	public static float ScreenRight = 7.0f;
+	public static float ScreenLeft = -7.7f;
+	public static float Ground = -3.0f;
 
 	private Manager() {}
 
@@ -26,6 +27,18 @@ public class Manager : MonoBehaviour {
 		}
 	}
 
+	// Batman
+	private Batman _batman;
+	public Batman Batman { 
+		get {
+			if (_batman == null) {
+				_batman = GetComponentInChildren<Batman>();
+			}
+			return _batman;
+		}
+	}
+
+	// Control Module
 	private Controls[] _controls;
 	public Controls[] Controls { 
 		get {
@@ -36,6 +49,7 @@ public class Manager : MonoBehaviour {
 		}
 	}
 
+	// Player Game Object
 	public GameObject GetPlayer(bool isPlayer1) {
 		GameObject player = null;
 		Controls[] controls = this.Controls;
@@ -139,6 +153,14 @@ public class Manager : MonoBehaviour {
 		if (Scroll != null) {
 			Scroll.freeze = false;
 		}
+	}
+
+	private SpriteRenderer _screenFail;
+	public SpriteRenderer ScreenFail { get { if (_screenFail == null) { _screenFail = transform.Find("[ HUD ]/fail").GetComponent<SpriteRenderer>(); } return _screenFail; } }
+	private SpriteRenderer _screenWin;
+	public SpriteRenderer ScreenWin { get { if (_screenWin == null) { _screenWin = transform.Find("[ HUD ]/win").GetComponent<SpriteRenderer>(); } return _screenWin; } }
+	public SpriteRenderer GetScreenGameOver (bool batmanGotCaught) {
+		return batmanGotCaught ? ScreenWin : ScreenFail;
 	}
 
 	public GameObject GetOpponent (bool isPlayer1) {
