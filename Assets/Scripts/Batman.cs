@@ -32,8 +32,13 @@ public class Batman : MonoBehaviour
 	public Sprite spriteDead;
 	private SpriteRenderer spriteRenderer;
 
+	void Start ()
+	{
+		spriteRenderer = GetComponent<SpriteRenderer>();
+	}
+
 	public void Push()
 	{
-		playerSprite.sprite = spriteDead;
+		spriteRenderer.sprite = spriteDead;
 	}
 }
