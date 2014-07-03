@@ -121,7 +121,7 @@ public class Controls : MonoBehaviour
 		
 		// Escape Menu
 		if (Input.GetKeyDown(KeyCode.Escape)) {
-			Application.LoadLevel(0);
+			Application.LoadLevel("MainMenu");
 		}
 		
 		// Main Loop

@@ -12,10 +12,31 @@ public class GenerationScroll : MonoBehaviour {
     private int nbLevelInstantiate = 0;
     private GameObject _currentLv = null;
     private GameObject _nextLv = null;
+    public bool freeze = false;
+    bool hasGenerate = true;
+    List<GameObject> onScreen = new List<GameObject>();
 
     public GameObject GetNextLv()
     {
-        return _nextLv;
+        if (!hasGenerate)
+        {
+            // hasGenerate = true;
+            // _currentLv = _nextLv;
+            int current = int.Parse(_currentLv.name.Substring(_currentLv.name.Length - 1, 1));
+            int next = int.Parse(_nextLv.name.Substring(_nextLv.name.Length - 1, 1));
+            int r = Random.Range(0, 5);
+            while (r == current || r == next)
+                r = Random.Range(0, 5);
+
+            _levels[r].transform.localPosition = new Vector3(nbLevelInstantiate++ * _widthLevel, 0.0f, 0.0f);
+            return _levels[r];
+             
+        }
+        else
+        {
+            hasGenerate = false;
+            return _nextLv;
+        }
     }
 
     private void Instanciate()
@@ -26,6 +47,7 @@ public class GenerationScroll : MonoBehaviour {
         go.transform.parent = this.transform;
         go.transform.localPosition = new Vector3(nbLevelInstantiate++ * _widthLevel, 0.0f, 0.0f);
 
+        onScreen.Add(go);
         _currentLv = go;
         _levels[0] = go;
         
@@ -40,7 +62,8 @@ public class GenerationScroll : MonoBehaviour {
             _levels[i] = go;
         }
 
-        _nextLv = _levels[Random.Range(1, 5)];
+        int r = Random.Range(1, 5);
+        _nextLv = _levels[r];
         _nextLv.transform.localPosition = new Vector3(nbLevelInstantiate++ * _widthLevel, 0.0f, 0.0f);
     }
 
@@ -79,21 +102,26 @@ public class GenerationScroll : MonoBehaviour {
 			Application.LoadLevel(0);
 		}
 
-        if (Manager.Instance.IsGameOver)
+        if (freeze || Manager.Instance.IsGameOver)
             return;
 
         Camera.main.transform.position = new Vector3(Camera.main.transform.position.x + 0.075f,
             Camera.main.transform.position.y, Camera.main.transform.position.z);
 
-        if (_currentLv.transform.position.x + _widthLevel + 2 < Camera.main.transform.position.x)
+        if (_currentLv.transform.position.x + _widthLevel + 2 < Manager.ScreenLeft)
         {
+            hasGenerate = true;
             _currentLv = _nextLv;
             int current = int.Parse(_currentLv.name.Substring(_currentLv.name.Length-1, 1));
+            print(onScreen.Count);
+            onScreen.Remove(_currentLv);
             int r = Random.Range(0,5);
-            while(r == current)
+            while (r == current)
                 r = Random.Range(0,5);
+
             _nextLv = _levels[r];
             _nextLv.transform.localPosition = new Vector3(nbLevelInstantiate++ * _widthLevel, 0.0f, 0.0f);
+            
         }
 	}
 }

@@ -32,13 +32,12 @@ public class UI : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
 	{
-		if (Input.GetKeyDown(KeyCode.P))
+		if (Input.GetKeyDown(KeyCode.P) && !is_pause)
 		{
 			Manager.Instance.Pause();
 			is_pause = true;
 		}
-
-		if (Input.GetKeyDown(KeyCode.Escape) && is_pause)
+        else if (Input.GetKeyDown(KeyCode.P) && is_pause)
 		{
 			Manager.Instance.Resume();
 			is_pause = false;

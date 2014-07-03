@@ -24,7 +24,7 @@ public class IA : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         Manager.Instance.Scroll.PrepareIA();
-        str = Manager.Instance.Scroll.GetNextLv().name;
+        str = "Level_0";
 
         StartCoroutine("Movement");
 	}
@@ -67,22 +67,20 @@ public class IA : MonoBehaviour {
                 this.transform.parent = path[0].transform;
                 var from = this.transform.localPosition;
                 var to = new Vector3(0.0f, this.collider.bounds.size.y - _offsetY, 0.0f);
-                /*this.transform.localPosition = to;
-                yield return new WaitForSeconds(0.75f);*/
-                float step = 0.0f; //non-smoothed
-                float rate = 9f; /// 2.0f; //amount to increase non-smooth step by
-                float smoothStep = 0.0f; //smooth step this time
-                float lastStep = 0.0f; //smooth step last time
+
+                float step = 0.0f;
+                float rate = 11f;
+                float smoothStep = 0.0f;
+                float lastStep = 0.0f;
                 while (step < 1.0)
                 {
-                    step += Time.deltaTime * rate; //increase the step
-                    smoothStep = Mathf.SmoothStep(0.0f, 1.0f, step); //get the smooth step
+                    step += Time.deltaTime * rate;
+                    smoothStep = Mathf.SmoothStep(0.0f, 1.0f, step);
                     this.transform.localPosition = Vector3.Slerp(from, to, smoothStep);
-                    lastStep = smoothStep; //store the smooth step
+                    lastStep = smoothStep;
                     yield return new WaitForSeconds(0.05f);
                 }
 
-                //finish any left-over
                 if (step > 1.0)
                 {
                     this.transform.localPosition = to;
@@ -167,7 +165,6 @@ public class IA : MonoBehaviour {
         pos.Reverse();
         path = pos;
         _paths.Add(nameLv, pos);
-        print(_paths.Count);
     }
 
     List<Node> FindPossibleNodes3(Node current, List<GameObject> obstacles, List<GameObject> walkableArea, List<Node> closed)

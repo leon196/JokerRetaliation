@@ -160,9 +160,9 @@ public class Manager : MonoBehaviour {
 				controls.freeze = true;
 			}
 		}
-		/*if (Scroll != null) {
+		if (Scroll != null) {
 			Scroll.freeze = true;
-		}*/
+		}
 	}
 
 	public void Resume ()
@@ -172,9 +172,9 @@ public class Manager : MonoBehaviour {
 				controls.freeze = false;
 			}
 		}
-		/*if (Scroll != null) {
+		if (Scroll != null) {
 			Scroll.freeze = false;
-		}*/
+		}
 	}
 
 	private SpriteRenderer _screenFail;
