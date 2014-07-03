@@ -210,7 +210,7 @@ public class Controls : MonoBehaviour
 		collisionUp = false;
 		collisionRight = false;
 		collisionLeft = false;
-		foreach (GameObject bloc in blocs) {
+		foreach (GameObject bloc in Manager.Instance.Blocs) {
 			Bounds bounds = bloc.collider.bounds;
 			bool intersectsCollider = playerCollider.bounds.Intersects(bounds);
 			if (intersectsCollider) {
