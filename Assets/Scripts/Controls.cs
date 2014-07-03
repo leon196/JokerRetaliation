@@ -133,7 +133,6 @@ public class Controls : MonoBehaviour
 			// Game Over
             if (transform.position.x < Manager.ScreenLeft - 2.5)
             {
-                print(Manager.ScreenLeft);
 				GameOver(false);
 			}
 
