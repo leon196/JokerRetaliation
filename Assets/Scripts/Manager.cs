@@ -11,7 +11,7 @@ public class Manager : MonoBehaviour {
 	public static float ScreenTop = 4.0f;
 	public static float ScreenBottom = -7.0f;
 	public static float ScreenRight = 7.0f;
-	public static float ScreenLeft = -7.0f;
+	public static float ScreenLeft = -7.7f;
 	public static float Ground = -3.0f;
 
 	private Manager() {}

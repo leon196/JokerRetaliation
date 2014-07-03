@@ -130,12 +130,14 @@ public class Controls : MonoBehaviour
 			CheckCollisionBatman();
 
 			// Game Over
-			// [menu]
+			if (transform.position.x < Manager.ScreenLeft) {
+				GameOver(false);
+			}
 
 			// Quick Debug Game over
-			if (transform.position.y < Manager.ScreenBottom) {
-				RespawnPlayer();
-			}
+			//if (transform.position.y < Manager.ScreenBottom) {
+				//RespawnPlayer();
+			//}
 
 			// Collision
 			CheckCollisionBlocs();
@@ -186,13 +188,14 @@ public class Controls : MonoBehaviour
 	void GameOver (bool batmanGotCaught)
 	{
 	
-		// Anim
-		StartAnimationAttack();
 		freeze = true;
 
-		batman.Push();
-		
-		Explosion(new Vector3(transform.position.x, collider.bounds.min.y, 0f));
+		if (batmanGotCaught)
+		{
+			StartAnimationAttack();
+			batman.Push();	
+			Explosion(new Vector3(transform.position.x, collider.bounds.min.y, 0f));
+		}
 
 		StartCoroutine(Cinematic(batmanGotCaught));
 	}
@@ -201,6 +204,7 @@ public class Controls : MonoBehaviour
 	{
 		// Init
 		SpriteRenderer screen = Manager.Instance.GetScreenGameOver(batmanGotCaught);
+
 		float x = 0.0f;
 		Color screenColor = screen.color;
 		screenColor.a = 0.0f;
@@ -208,16 +212,33 @@ public class Controls : MonoBehaviour
 		screen.enabled = true;
 
 		// Processing
-		float delay = 10.0f;
-		while (x < delay) {
+		float delay = batmanGotCaught ? 10.0f : 1.0f;
 
-			Explosion(new Vector3(Random.Range(Manager.ScreenLeft, Manager.ScreenRight), Random.Range(Manager.ScreenBottom, Manager.ScreenTop), 0f));
-			
-			screenColor.a = x / delay;
-			screen.color = screenColor;
+		if (batmanGotCaught) {
+			while (x < delay)
+			{
+				// Boum !
+				Explosion(new Vector3(Random.Range(Manager.ScreenLeft, Manager.ScreenRight), Random.Range(Manager.ScreenBottom, Manager.ScreenTop), 0f));
+				
+				// Fade in
+				screenColor.a = x / delay;
+				screen.color = screenColor;
 
-			x += Time.deltaTime;
-			yield return null;
+				// Motor
+				x += Time.deltaTime;
+				yield return null;
+			}
+		} else {
+			while (x < delay)
+			{
+				// Fade in
+				screenColor.a = x / delay;
+				screen.color = screenColor;
+
+				// Motor
+				x += Time.deltaTime;
+				yield return null;
+			}
 		}
 
 		// Wait for it ...
